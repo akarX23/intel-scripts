@@ -1,0 +1,38 @@
+- name: Setup Opensearch dashboards
+  hosts: cluster_manager
+  become: true
+
+  tasks:
+    - name: Create data directory for opensearch
+      file:
+        path: "~/dashboard"
+        state: directory
+        mode: "0777"
+        owner: ubuntu
+        group: ubuntu
+      become: true
+      become_user: ubuntu
+
+    - name: Generate dashboard compose file
+      become_user: ubuntu
+      script: |
+        ./gen_dashboard_compose.sh \
+        --managers  "{% for host in groups['all'] %}{{ hostvars[host]['ansible_host'] }}{% if not loop.last %},{% endif %}{% endfor %}"
+      args:
+        chdir: /home/ubuntu/dashboard
+
+    - name: Change permission of dashboard compose file
+      file:
+        path: ~/data/docker-compose.yml
+        mode: "0755"
+        owner: ubuntu
+        group: ubuntu
+      become_user: ubuntu
+      become: true
+
+    - name: Install opensearch dashboard with docker compose
+      tags: docker
+      become_user: ubuntu
+      command: docker compose up -d
+      args:
+        chdir: /home/ubuntu/dashboard

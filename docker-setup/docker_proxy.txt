@@ -1,0 +1,4 @@
+[Service]
+Environment="HTTP_PROXY=http://proxy01.iind.intel.com:911//"
+Environment="HTTPS_PROXY=http://proxy01.iind.intel.com:912/"
+Environment="NO_PROXY=localhost,127.0.0.0"
