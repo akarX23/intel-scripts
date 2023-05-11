@@ -32,6 +32,8 @@ rmmod usdm_drv
 CORES=$(nproc --all)
 insmod $ICP_ROOT/build/usdm_drv.ko max_huge_pages=1024 max_huge_pages_per_process=$CORES
 
+sudo apt-get install liblz4-dev
+
 git clone https://github.com/intel/QATzip $QZ_ROOT
 
 cd $QZ_ROOT
