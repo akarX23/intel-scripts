@@ -1,32 +1,55 @@
 #!/bin/bash
 
-# Install ZSH
-apt-get update -y
-apt-get install -y zsh
+# Function to set up ZSH for a specific user
+setup_zsh_for_user() {
+  local user="$1"
+  local home_dir=$(eval echo "~$user")
 
-source /etc/profile.d/proxy_setup.sh
-chmod 777 /etc/profile.d/proxy_setup.sh
+  # Install ZSH
+  sudo apt-get update -y
+  sudo apt-get install -y zsh
 
-# Install Oh-My-Zsh
-Y | sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+  source /etc/profile.d/proxy_setup.sh
+  sudo chmod 777 /etc/profile.d/proxy_setup.sh
 
-source /etc/profile.d/proxy_setup.sh
+  # Install Oh-My-Zsh
+  yes | sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
-# Configure Oh-My-Zsh with Jonathan theme and plugins
-sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="jonathan"/g' /root/.zshrc
-sed -i 's/plugins=(git)/plugins=(git zsh-syntax-highlighting zsh-autosuggestions)/g' /root/.zshrc
-git clone https://github.com/zsh-users/zsh-syntax-highlighting.git /root/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
-git clone https://github.com/zsh-users/zsh-autosuggestions.git /root/.oh-my-zsh/custom/plugins/zsh-autosuggestions
+  source /etc/profile.d/proxy_setup.sh
 
-# Set ZSH as the default shell for all users
-chsh -s $(which zsh) root
-for user in $(ls /home); do
-  cp /root/.zshrc /home/$user/
-  cp -r  /root/.oh-my-zsh /home/$user/
-  echo "source /etc/profile.d/proxy_setup.sh" >> /home/$user/.zshrc
-  chown $user:$user /home/$user/.oh-my-zsh 
-  chown $user:$user /home/$user/.zshrc
-  chsh -s $(which zsh) $user
-done
+  # Configure Oh-My-Zsh with Jonathan theme and plugins
+  sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="jonathan"/g' "$home_dir/.zshrc"
+  sed -i 's/plugins=(git)/plugins=(git zsh-syntax-highlighting zsh-autosuggestions)/g' "$home_dir/.zshrc"
+  git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$home_dir/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
+  git clone https://github.com/zsh-users/zsh-autosuggestions.git "$home_dir/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
 
-echo "source /etc/profile.d/proxy_setup.sh" >> /root/.zshrc
+  # Set ZSH as the default shell for the user
+  sudo chsh -s $(which zsh) "$user"
+
+  # Set up proxy setup script
+  echo "source /etc/profile.d/proxy_setup.sh" >> "$home_dir/.zshrc"
+  sudo chown -R "$user:$user" "$home_dir/.oh-my-zsh" "$home_dir/.zshrc"
+}
+
+# Install ZSH for all users if specified
+if [ "$1" == "--all-users" ]; then
+  for user in $(ls /home); do
+    setup_zsh_for_user "$user"
+  done
+else
+  # Check if user argument is provided
+  if [ -z "$1" ]; then
+    echo "Please provide a user as an argument or use the --all-users flag to install ZSH for all users."
+    exit 1
+  fi
+
+  # Check if the user exists
+  if id "$1" >/dev/null 2>&1; then
+    setup_zsh_for_user "$1"
+  else
+    echo "User $1 does not exist."
+    exit 1
+  fi
+fi
+
+echo "ZSH setup complete."
