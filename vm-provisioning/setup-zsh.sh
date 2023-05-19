@@ -27,7 +27,7 @@ setup_zsh_for_user() {
   sudo chsh -s $(which zsh) "$user"
 
   # Set up proxy setup script
-  echo "source /etc/profile.d/proxy_setup.sh" >> "$home_dir/.zshrc"
+  echo "# source /etc/profile.d/proxy_setup.sh" >> "$home_dir/.zshrc"
   sudo chown -R "$user:$user" "$home_dir/.oh-my-zsh" "$home_dir/.zshrc"
 }
 
