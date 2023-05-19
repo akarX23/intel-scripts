@@ -19,10 +19,6 @@ while [ "$1" != "" ]; do
             OPENSSL_INSTALL_DIR="$2"
             shift 1
             ;;
-        --qat-driver-dir )
-            ICP_ROOT="$2"
-            shift 1
-            ;;
         * )
             echo "Unknown argument: $1"
             exit 1
