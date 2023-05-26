@@ -235,9 +235,221 @@ curl -k https://localhost:443
 # Certificate info
 openssl s_client -showcerts -connect localhost:443
 ```
-To see if QAT is actually being used, do `cat /sys/kernel/debug/qat_4xxx_0000:6b:00.0/fw_counters`. This will display some number which will rise each time you use QAT Engine.
+To see if QAT is actually being used, do `cat /sys/kernel/debug/qat_4xxx_0000:6b:00.0/fw_counters`. This will display some number which will rise each time you use the QAT driver.
+
+## Benchmarking NGINX
+We use [wrk](https://github.com/wg/wrk/tree/master) to benchmark NGINX. There will be some configuration changes in the QAT Driver and NGINX. 
+
+### QAT Configuration
+For both the QAT devices in my system, the configuration files - `/etc/4xxx_dev0.conf` and `/etc/4xxx_dev1.conf` have the `SHIM` section setup like this:
+```
+[SHIM]
+NumberCyInstances = 1
+NumberDcInstances = 0
+NumProcesses = 32
+LimitDevAccess = 1
+```
+`NumProcesses` should be as high as possible. In my case I get error as soon as I increase it beyond 32. It's an issue I have yet to fix. Also the number of `worker_processes` in the NGINX configuration should be half of this number.
+
+### NGINX Configuration
+The number of worker processes are **16**. The `/Nginx/conf/nginx.conf` looks like this:
+```
+ #user  root;
+worker_processes  16;
+
+load_module modules/ngx_ssl_engine_qat_module.so;
+
+events {
+    use epoll;
+    worker_connections 8192;
+    accept_mutex off;
+}
+
+ssl_engine {
+    use_engine qatengine;
+    default_algorithms RSA,EC,DH,DSA;
+    qat_engine {
+        qat_offload_mode async;
+        qat_notify_mode poll;
+        qat_poll_mode heuristic;
+#        qat_sw_fallback on;
+    }
+}
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    #log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+    #                  '$status $body_bytes_sent "$http_referer" '
+    #                  '"$http_user_agent" "$http_x_forwarded_for"';
+
+    #access_log  logs/access.log  main;
+
+    sendfile        on;
+    #tcp_nopush     on;
+
+    #keepalive_timeout  0;
+    keepalive_timeout  65;
+
+    gzip  on;
+    gzip_min_length     128;
+    gzip_comp_level     1;
+    gzip_types  text/css text/javascript text/xml text/plain text/x-component application/javascript application/json application/xml application/rss+xml font/truetype font/opentype application/vnd.ms-fontobject image/svg+xml;
+    gzip_vary            on;
+    gzip_disable        "msie6";
+    gzip_http_version   1.0;
+
+    server {
+        listen       80;
+        server_name  localhost;
+
+        #charset koi8-r;
+
+        #access_log  logs/host.access.log  main;
+
+        location / {
+            root   html;
+            index  index.html index.htm;
+        }
+
+        #error_page  404              /404.html;
+
+        # redirect server error pages to the static page /50x.html
+        #
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+            root   html;
+        }
+    }
+    
+    server {
+        #If QAT Engine enabled,  `asynch` need to add to `listen` directive or just add `ssl_asynch  on;` to the context.
+        listen       443 ssl asynch;
+        server_name  localhost;
+
+        ssl_protocols       TLSv1.3;
+        ssl_certificate      /Nginx/ssl/test.crt;
+        ssl_certificate_key  /Nginx/ssl/test.key;
+        
+        location / {
+            root   html;
+            index  index.html index.htm;
+        }
+    }
+}
+```
+When I execute `curl -k https://localhost:443` I am able to get the NGINX welcome page. Also each time the endpoint is accessed the value in `/sys/kernel/debug/qat_4xxx_0000:6b:00.0/fw_counters` goes up which means that traffic is being offloaded to QAT.
+
+### Benchmarking Process
+We will use `wrk` and some lua scripts to generate the load for benchmarking. The scripts are located in the `QAT-SPR/wrk-scripts` folder. Install `wrk` with these commands:
+```
+git clone https://github.com/wg/wrk
+cd wrk
+make
+cp ./wrk /usr/local/bin
+```
+Once you have NGINX up and running and working with QAT, execute these commands as root:
+```
+cd QAT-SPR/wrk-scripts
+chmod +x ./run-wrk.sh
+./run-wrk.sh --server localhost:443 --size 10KB --with-qat
+./run-wrk.sh --server localhost:443 --size 100KB --with-qat
+./run-wrk.sh --server localhost:443 --size 1MB --with-qat
+```
+Once these execute one by one, you will logs in the `logs` folder. You can check the wrk logs for useful information such as **requests per second** and **data transferred**. 
+
+Now to compare these logs with an unaccelarated NGINX, we can remove the `qat_engine` configuration in the `nginx.conf` file. The new file looks like this:
+```
+ #user  root;
+worker_processes  16;
+
+load_module modules/ngx_ssl_engine_qat_module.so;
+
+events {
+    #use epoll;
+    worker_connections 8192;
+    #accept_mutex off;
+}
+
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    #log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+    #                  '$status $body_bytes_sent "$http_referer" '
+    #                  '"$http_user_agent" "$http_x_forwarded_for"';
+
+    #access_log  logs/access.log  main;
+
+    sendfile        on;
+    #tcp_nopush     on;
+
+    #keepalive_timeout  0;
+    keepalive_timeout  65;
+
+    gzip  on;
+    gzip_min_length     128;
+    gzip_comp_level     1;
+    gzip_types  text/css text/javascript text/xml text/plain text/x-component application/javascript application/json application/xml application/rss+xml font/truetype font/opentype application/vnd.ms-fontobject image/svg+xml;
+    gzip_vary            on;
+    gzip_disable        "msie6";
+    gzip_http_version   1.0;
+
+    server {
+        listen       80;
+        server_name  localhost;
+
+        location / {
+            root   html;
+            index  index.html index.htm;
+        }
+        
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+            root   html;
+        }
+    }
+    
+    server {
+        listen       443 ssl;
+        server_name  localhost;
+
+        ssl_protocols       TLSv1.3;
+        ssl_certificate      /Nginx/ssl/test.crt;
+        ssl_certificate_key  /Nginx/ssl/test.key;
+        
+        location / {
+            root   html;
+            index  index.html index.htm;
+        }
+    }
+}
+```
+Now run `/Nginx/sbin/nginx -s reload`. Now run the above wrk commands but without the `--with-qat` option:
+```
+./run-wrk.sh --server localhost:443 --size 10KB
+./run-wrk.sh --server localhost:443 --size 100KB
+./run-wrk.sh --server localhost:443 --size 1MB
+```
+You will have similar new log files like before. 
+
+You can compare these logs to measure how well the benchmark performed. You can also check `cat /sys/kernel/debug/qat_4xxx_0000:6b:00.0/fw_counters` to see how much QAT was used.
+
+## Command Cheatsheet
+- Check status of qat service: `service qat_service status`
+- Restart qat service: `service qat_service restart`
+- Check if qat modules are loaded: `lsmod | grep "qa"`
+- Check how much QAT is being utilized: 
+`cat /sys/kernel/debug/qat_4xxx_0000:6b:00.0/fw_counters`
+- Start NGINX server: `<NGINX install dir>/sbin/nginx` 
+- Reload NGINX with new configuration: `<NGINX install dir>/sbin/nginx -s reload` 
 
 ## Existing Issues
-The setup described above doesn't completely work for me yet. Issues I am facing are:
+Issues I am facing are:
 - I haven't been able to use QAT Engine and QATzip together. They both require some special configuration and they both provide one configuration file which is the `4xxx_dev0.conf` file. This file is responsible for configuring the QAT Driver. I haven't beel able to compile a file that can work for both. Currently I am only able to make one of these work at a time by using their configuration file.
-- For some reason, NGINX isn't able to use the QAT Engine with ssl. Even though `openssl` works without problem, there is some issue here. Also if I start nginx with the engine configuration, OpenSSL suddenly has a problem and can't use the QAT Engine.
+
+## Doubts
+- I am not sure whether the parameters to the `wrk` client are wrong or there is some problem with the configuration because the QAT offload is definitely happening but it's not enough for some reason.
+- When I increase the value of `NumProcesses` in the `[SHIM]` seciton of the QAT configuration file, it fails to load QAT. I am not able to find clear information about this.
