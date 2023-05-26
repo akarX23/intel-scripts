@@ -3,7 +3,7 @@
 ulimit -n 655350
 
 # Default values
-server=""
+server="localhost:443"
 size=""
 with_qat=""
 duration=120
@@ -63,15 +63,6 @@ case $size in
     ;;
 esac
 
-# Construct wrk command
-wrk_cmd="wrk -t $threads -c $connections -d ${duration}s -s ./${size}_query.lua -H \"Connection: keep-alive\" --timeout 4s -L"
-
-if [ "$with_qat" = true ]; then
-  wrk_cmd+=" --with-qat"
-fi
-
-wrk_cmd+=" https://$server"
-
 # Display timer function
 function countdown {
     local max_time=$1
@@ -95,20 +86,22 @@ function countdown {
     printf "\n"
 }
 
-mkdir logs
+mkdir logs 2>1
 
 # Run wrk and save output to log file
 
 echo "Executing normal query script"
 log_file="${size}${with_qat}_query.log"
-$wrk_cmd & > "logs/$log_file" 2>&1
+wrk -t $threads -c $connections -d ${duration}s -s ./${size}_query.lua --timeout 4s \
+ -H "Connection: keep-alive" "https://$server" > "logs/$log_file" 2>&1 &
 pid=$!
-countdown $size $pid
+countdown $duration $pid
 
-wrk_cmd="wrk -t $threads -c $connections -d ${duration}s -s ./${size}_video_query.lua -H \"Connection: keep-alive\" --timeout 4s -L"
+echo "Executing video query script"
 log_file="${size}${with_qat}_video_query.log"
-$wrk_cmd & > "logs/$log_file" 2>&1
+wrk -t $threads -c $connections -d ${duration}s -s ./${size}_video_query.lua --timeout 4s \
+ -H "Connection: keep-alive" "https://$server" > "logs/$log_file" 2>&1 &
 pid=$!
-countdown $size $pid
+countdown $duration $pid
 
 echo "Wrk script executed. Logs saved under logs/ directory."
