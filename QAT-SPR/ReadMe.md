@@ -238,7 +238,13 @@ openssl s_client -showcerts -connect localhost:443
 To see if QAT is actually being used, do `cat /sys/kernel/debug/qat_4xxx_0000:6b:00.0/fw_counters`. This will display some number which will rise each time you use the QAT driver.
 
 ## Benchmarking NGINX
-We use [wrk](https://github.com/wg/wrk/tree/master) to benchmark NGINX. There will be some configuration changes in the QAT Driver and NGINX. 
+We use [wrk](https://github.com/wg/wrk/tree/master) to benchmark NGINX. There will be some configuration changes in the QAT Driver and NGINX.  Install `wrk` with these commands:
+```
+git clone https://github.com/wg/wrk
+cd wrk
+make
+cp ./wrk /usr/local/bin
+```
 
 ### QAT Configuration
 For both the QAT devices in my system, the configuration files - `/etc/4xxx_dev0.conf` and `/etc/4xxx_dev1.conf` have the `SHIM` section setup like this:
@@ -342,13 +348,8 @@ http {
 When I execute `curl -k https://localhost:443` I am able to get the NGINX welcome page. Also each time the endpoint is accessed the value in `/sys/kernel/debug/qat_4xxx_0000:6b:00.0/fw_counters` goes up which means that traffic is being offloaded to QAT.
 
 ### Benchmarking Process
-We will use `wrk` and some lua scripts to generate the load for benchmarking. The scripts are located in the `QAT-SPR/wrk-scripts` folder. Install `wrk` with these commands:
-```
-git clone https://github.com/wg/wrk
-cd wrk
-make
-cp ./wrk /usr/local/bin
-```
+We will use `wrk` and some lua scripts to generate the load for benchmarking. The scripts are located in the `QAT-SPR/wrk-scripts` folder. 
+
 Once you have NGINX up and running and working with QAT, execute these commands as root:
 ```
 cd QAT-SPR/wrk-scripts
@@ -357,7 +358,7 @@ chmod +x ./run-wrk.sh
 ./run-wrk.sh --server localhost:443 --size 100KB --with-qat
 ./run-wrk.sh --server localhost:443 --size 1MB --with-qat
 ```
-Once these execute one by one, you will logs in the `logs` folder. You can check the wrk logs for useful information such as **requests per second** and **data transferred**. 
+Once these execute one by one, you will get logs in a new `logs` folder. You can check the wrk logs for useful information such as **requests per second** and **data transferred**. 
 
 Now to compare these logs with an unaccelarated NGINX, we can remove the `qat_engine` configuration in the `nginx.conf` file. The new file looks like this:
 ```
@@ -436,6 +437,28 @@ Now run `/Nginx/sbin/nginx -s reload`. Now run the above wrk commands but withou
 You will have similar new log files like before. 
 
 You can compare these logs to measure how well the benchmark performed. You can also check `cat /sys/kernel/debug/qat_4xxx_0000:6b:00.0/fw_counters` to see how much QAT was used.
+
+For me this was the result:
+- Workload size 10KB
+
+|QAT|Total Requests|Total Data Transfer|Duration|Requests/sec|Transfer/sec|Max Latency|Max Requests/sec|
+|---|---|---|---|---|---|---|---|
+|Enabled|37517816|11.57GB|2m|312387.09|98.61MB|39.33ms|37.89k|
+|Disabled|37779623|10.84GB|2m|314568.04|92.40MB|35.66ms|36.77k|
+
+- Workload size 100KB
+
+|QAT|Total Requests|Total Data Transfer|Duration|Requests/sec|Transfer/sec|Max Latency|Max Requests/sec|
+|---|---|---|---|---|---|---|---|
+|Enabled|37170329|11.46GB|2m|309494.12|97.70MB|46.09ms|17.07k|
+|Disabled|37325483|10.71GB|2m|310787.62|91.29MB|44.24ms|24.22k|
+
+- Workload size 1MB
+
+|QAT|Total Requests|Total Data Transfer|Duration|Requests/sec|Transfer/sec|Max Latency|Max Requests/sec|
+|---|---|---|---|---|---|---|---|
+|Enabled|39964877|12.32GB|2m|332765.85|105.04MB|131.21ms|61.34k|
+|Disabled|38666838|11.09GB|2m|321964.85|94.58MB|331.80ms|51.67k|
 
 ## Command Cheatsheet
 - Check status of qat service: `service qat_service status`
