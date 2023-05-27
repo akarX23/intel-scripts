@@ -1,45 +1,5 @@
 #!/bin/bash
 
-#!/bin/bash
-
-custom_sort() {
-    local prefix
-    local suffix
-    
-    prefix=$(echo "$1" | sed -E 's/(^[[:digit:]]+[[:alpha:]]+[[:digit:]]+).*/\1/')
-    suffix=$(echo "$1" | sed -E 's/^[[:digit:]]+[[:alpha:]]+[[:digit:]]+(.*)$/\1/')
-    
-    if [[ $prefix == "10KB" ]]; then
-        echo "1 $suffix"
-    elif [[ $prefix == "100KB" ]]; then
-        echo "2 $suffix"
-    elif [[ $prefix == "1MB" ]]; then
-        echo "3 $suffix"
-    else
-        echo "4 $1"
-    fi
-}
-
-sort_files() {
-    local files=()
-    local sorted_files=()
-
-    # Read input from stdin (piped from ls command)
-    while IFS= read -r file; do
-        files+=("$file")
-    done
-
-    for file in "${files[@]}"; do
-        sorted_files+=("$(custom_sort "$file")")
-    done
-
-    sorted_files=($(echo "${sorted_files[@]}" | tr ' ' '\n' | sort | cut -d ' ' -f2-))
-
-    for file in "${sorted_files[@]}"; do
-        echo "$file"
-    done
-}
-
 # Function to get content type based on log file name
 get_content_type() {
   filename=$(basename "$1")
@@ -80,7 +40,7 @@ summarize_log_file() {
   connections=$(echo "$output" | awk '/ threads and / {print $4}')
 
   # Extract max latency and max requests/sec
-  max_latency=$(echo "$output" | awk '/ Latency/ {print $4}')
+  ninety_ninth_p=$(echo "$output" | awk '/ 99%/ {print $2}')
   max_requests=$(echo "$output" | awk '/ Req\/Sec/ {print $4}')
 
   # Extract total requests and total data transfer
@@ -98,7 +58,32 @@ summarize_log_file() {
   file_size="${result[0]}"
   content_type="${result[@]:1}"
 
-  printf "| %8s | %25s | %10s | %13s | %10s | %20s | %10s | %20s | %10s | %13s | %10s |\n" $file_size "$content_type" $threads   $connections   $duration  $total_requests   $requests_sec  $total_data  $data_sec  $max_latency  $max_requests
+  # Calculate the percentage change in total data transfer if "_qat" is present in the file name
+  if [[ "$1" == *_qat_* ]]; then
+    # Get the corresponding log file without QAT
+    log_file_without_qat="${1/qat_/}"
+
+    # Get the total data transfer without QAT
+    total_data_without_qat=$(cat "$log_file_without_qat" | awk '/ requests in / {print $5}')
+
+    # Extracting the digits from $total_data and storing as floating-point number
+    total_data_float=$(echo "$total_data" | sed 's/MB$//' | awk '{ printf "%.2f", $0 }')
+
+    # Extracting the digits from $total_data_without_qat and storing as floating-point number
+    total_data_without_qat_float=$(echo "$total_data_without_qat" | sed 's/MB$//' | awk '{ printf "%.2f", $0 }')
+
+    percent_change=$(echo "scale=2; (($total_data_float - $total_data_without_qat_float) / $total_data_without_qat_float) * 100" | bc)
+
+    if (( $(echo "$percent_change >= 0" | bc -l) )); then
+      percent_change="+$percent_change"
+    else  
+      percent_change="-$percent_change"
+    fi
+
+  else
+    percent_change="-"
+  fi
+  printf "| %8s | %25s | %10s | %13s | %10s | %20s | %10s | %20s | %10s | %13s | %10s | %10s |\n" $file_size "$content_type" $threads   $connections   $duration  $total_requests   $requests_sec  $total_data  $data_sec  $ninety_ninth_p  $max_requests  $percent_change
 }
 
 append_files() {
@@ -127,11 +112,11 @@ if [ -z "$log_files" ]; then
 fi
 
 # Calculate the width of the table
-table_width=181
+table_width=194
 
 # Print table header
 echo "+$(printf "%0.s-" $(seq 1 $table_width))+"
-printf "| %8s | %25s | %10s | %13s | %10s | %20s | %10s | %20s | %10s | %13s | %10s |\n" "Workload" "Type" "Threads" "Connections" "Duration" "Total Requests" "Requests/s" "Total Data Transfer" "Transfer/s" "Max Latency" "Max Req/s"
+printf "| %8s | %25s | %10s | %13s | %10s | %20s | %10s | %20s | %10s | %13s | %10s | %10s |\n" "Workload" "Type" "Threads" "Connections" "Duration" "Total Requests" "Requests/s" "Total Data Transfer" "Transfer/s" "99% Latency" "Max Req/s" "% Change"
 echo "+$(printf "%0.s-" $(seq 1 $table_width))+"
 
 # Process each log file
