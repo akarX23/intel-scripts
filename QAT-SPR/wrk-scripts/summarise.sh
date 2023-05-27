@@ -1,5 +1,45 @@
 #!/bin/bash
 
+#!/bin/bash
+
+custom_sort() {
+    local prefix
+    local suffix
+    
+    prefix=$(echo "$1" | sed -E 's/(^[[:digit:]]+[[:alpha:]]+[[:digit:]]+).*/\1/')
+    suffix=$(echo "$1" | sed -E 's/^[[:digit:]]+[[:alpha:]]+[[:digit:]]+(.*)$/\1/')
+    
+    if [[ $prefix == "10KB" ]]; then
+        echo "1 $suffix"
+    elif [[ $prefix == "100KB" ]]; then
+        echo "2 $suffix"
+    elif [[ $prefix == "1MB" ]]; then
+        echo "3 $suffix"
+    else
+        echo "4 $1"
+    fi
+}
+
+sort_files() {
+    local files=()
+    local sorted_files=()
+
+    # Read input from stdin (piped from ls command)
+    while IFS= read -r file; do
+        files+=("$file")
+    done
+
+    for file in "${files[@]}"; do
+        sorted_files+=("$(custom_sort "$file")")
+    done
+
+    sorted_files=($(echo "${sorted_files[@]}" | tr ' ' '\n' | sort | cut -d ' ' -f2-))
+
+    for file in "${sorted_files[@]}"; do
+        echo "$file"
+    done
+}
+
 # Function to get content type based on log file name
 get_content_type() {
   filename=$(basename "$1")
@@ -61,8 +101,24 @@ summarize_log_file() {
   printf "| %8s | %25s | %10s | %13s | %10s | %20s | %10s | %20s | %10s | %13s | %10s |\n" $file_size "$content_type" $threads   $connections   $duration  $total_requests   $requests_sec  $total_data  $data_sec  $max_latency  $max_requests
 }
 
+append_files() {
+    local files=()
+    local directory=${@: -1}  # Last argument is the directory
+    local sizes=("${@:1:$#-1}")  # All arguments except the last one are sizes
+
+    for size in "${sizes[@]}"; do
+        files+=($(ls "$directory" | grep "$size"_qat_v))
+        files+=($(ls "$directory" | grep "$size"_v))
+        files+=($(ls "$directory" | grep "$size"_qat_q))
+        files+=($(ls "$directory" | grep "$size"_qu))
+    done
+
+    printf '%s\n' "${files[@]}"
+}
+
+
 # Get list of log files
-log_files=$(find logs -name "*.log" | sort -t/ -k2 -r)
+log_files=$(append_files "1MB" "100KB" "10KB" "logs")
 
 # Check if log files exist
 if [ -z "$log_files" ]; then
@@ -80,7 +136,7 @@ echo "+$(printf "%0.s-" $(seq 1 $table_width))+"
 
 # Process each log file
 for log_file in $log_files; do
-  summarize_log_file "$log_file"
+  summarize_log_file "logs/$log_file"
 done
 
 # Print table footer
