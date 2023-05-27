@@ -42,8 +42,25 @@ if [ "$with_qat" = true ]; then
   qat_arg="--with-qat"
 fi
 
+echo "---------------------------------------------"
+echo "Running wrk with 10KB size"
+echo "---------------------------------------------"
 ./run-wrk.sh --server $server --size 10KB --duration $duration $qat_arg  
-./run-wrk.sh --server $server --size 100KB --duration $duration $qat_arg 
-./run-wrk.sh --server $server --size 1MB --duration $duration $qat_arg 
+echo
 
+echo "---------------------------------------------"
+echo "Running wrk with 100KB size"
+echo "---------------------------------------------"
+./run-wrk.sh --server $server --size 100KB --duration $duration $qat_arg 
+echo
+
+echo "---------------------------------------------"
+echo "Running wrk with 1MB size"
+echo "---------------------------------------------"
+./run-wrk.sh --server $server --size 1MB --duration $duration $qat_arg 
+echo
+
+echo "---------------------------------------------"
+echo "Summarizing results"
+echo "---------------------------------------------"
 ./summarise.sh

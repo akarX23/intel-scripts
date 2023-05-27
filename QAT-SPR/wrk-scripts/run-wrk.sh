@@ -63,6 +63,13 @@ case $size in
     ;;
 esac
 
+echo -e "Executing test for a $size workload with the following parameters:\n\n"
+echo -e "Server URL: https://$server\n"
+echo -e "Size: $size\n"
+echo -e "Duration: ${duration}s\n"
+echo -e "Threads: $threads\n"
+echo -e "Connections: $connections\n"
+
 # Display timer function
 function countdown {
     local max_time=$1
@@ -90,18 +97,20 @@ mkdir logs 2>1
 
 # Run wrk and save output to log file
 
-echo "Executing normal query script"
+echo -e "\nExecuting normal query script\n"
 log_file="${size}${with_qat}_query.log"
 wrk -t $threads -c $connections -d ${duration}s -s ./${size}_query.lua --timeout 4s \
  -H "Connection: keep-alive" "https://$server" > "logs/$log_file" 2>&1 &
 pid=$!
 countdown $duration $pid
 
-echo "Executing video query script"
+echo -e "\n"
+
+echo -e "Executing video query script\n"
 log_file="${size}${with_qat}_video_query.log"
 wrk -t $threads -c $connections -d ${duration}s -s ./${size}_video_query.lua --timeout 4s \
  -H "Connection: keep-alive" "https://$server" > "logs/$log_file" 2>&1 &
 pid=$!
 countdown $duration $pid
 
-echo "Wrk script executed. Logs saved under logs/ directory."
+echo -e "\nWrk script executed. Logs saved under logs/ directory."
