@@ -13,14 +13,14 @@ get_content_type() {
   fi
   
   # Extract content type
-  if [[ $filename == *video* ]]; then
-    content_type="Video query w/o QAT"
-  elif [[ $filename == *qat_video* ]]; then
+  if [[ $filename == *qat_video* ]]; then
     content_type="Video query with QAT"
-  elif [[ $filename == *query* ]]; then
-    content_type="Normal query w/o QAT"
   elif [[ $filename == *qat_query* ]]; then
     content_type="Normal query with QAT"
+  elif [[ $filename == *video* ]]; then
+    content_type="Video query w/o QAT"
+  elif [[ $filename == *query* ]]; then
+    content_type="Normal query w/o QAT"
   fi
 
   # Return file size and content type as an array
@@ -58,7 +58,7 @@ summarize_log_file() {
   file_size="${result[0]}"
   content_type="${result[@]:1}"
 
-  printf "| %8s | %20s | %10s | %13s | %10s | %20s | %10s | %20s | %10s | %13s | %10s |\n" $file_size "$content_type" $threads   $connections   $duration  $total_requests   $requests_sec  $total_data  $data_sec  $max_latency  $max_requests
+  printf "| %8s | %25s | %10s | %13s | %10s | %20s | %10s | %20s | %10s | %13s | %10s |\n" $file_size "$content_type" $threads   $connections   $duration  $total_requests   $requests_sec  $total_data  $data_sec  $max_latency  $max_requests
 }
 
 # Get list of log files
@@ -71,11 +71,11 @@ if [ -z "$log_files" ]; then
 fi
 
 # Calculate the width of the table
-table_width=176
+table_width=181
 
 # Print table header
 echo "+$(printf "%0.s-" $(seq 1 $table_width))+"
-printf "| %8s | %20s | %10s | %13s | %10s | %20s | %10s | %20s | %10s | %13s | %10s |\n" "Workload" "Type" "Threads" "Connections" "Duration" "Total Requests" "Requests/s" "Total Data Transfer" "Transfer/s" "Max Latency" "Max Req/s"
+printf "| %8s | %25s | %10s | %13s | %10s | %20s | %10s | %20s | %10s | %13s | %10s |\n" "Workload" "Type" "Threads" "Connections" "Duration" "Total Requests" "Requests/s" "Total Data Transfer" "Transfer/s" "Max Latency" "Max Req/s"
 echo "+$(printf "%0.s-" $(seq 1 $table_width))+"
 
 # Process each log file
