@@ -32,8 +32,8 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Check if required arguments are provided
-if [ -z "$server" ] || [ -z "$size" ]; then
-  echo "Usage: $0 --server <IP address:PORT(443)> --size <1MB|10KB|100KB> --duration <duration in seconds> [--with-qat]"
+if [ -z "$server" ]; then
+  echo "Usage: $0 --server <IP address:PORT(443)> --duration <duration in seconds> [--with-qat]"
   exit 1
 fi
 
