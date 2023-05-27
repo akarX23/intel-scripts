@@ -64,11 +64,11 @@ case $size in
 esac
 
 echo -e "Executing test for a $size workload with the following parameters:\n\n"
-echo -e "Server URL: https://$server\n"
-echo -e "Size: $size\n"
-echo -e "Duration: ${duration}s\n"
-echo -e "Threads: $threads\n"
-echo -e "Connections: $connections\n"
+echo -e "Server URL: https://$server"
+echo -e "Size: $size"
+echo -e "Duration: ${duration}s"
+echo -e "Threads: $threads"
+echo -e "Connections: $connections"
 
 # Display timer function
 function countdown {
@@ -97,7 +97,7 @@ mkdir logs 2>1
 
 # Run wrk and save output to log file
 
-echo -e "\nExecuting normal query script\n"
+echo -e "\nExecuting normal query script"
 log_file="${size}${with_qat}_query.log"
 wrk -t $threads -c $connections -d ${duration}s -s ./${size}_query.lua --timeout 4s \
  -H "Connection: keep-alive" "https://$server" > "logs/$log_file" 2>&1 &
@@ -106,11 +106,11 @@ countdown $duration $pid
 
 echo -e "\n"
 
-echo -e "Executing video query script\n"
+echo -e "Executing video query script"
 log_file="${size}${with_qat}_video_query.log"
 wrk -t $threads -c $connections -d ${duration}s -s ./${size}_video_query.lua --timeout 4s \
  -H "Connection: keep-alive" "https://$server" > "logs/$log_file" 2>&1 &
 pid=$!
 countdown $duration $pid
 
-echo -e "\nWrk script executed. Logs saved under logs/ directory."
+echo -e "\nWrk script executed for $size. Logs saved under logs/ directory."
