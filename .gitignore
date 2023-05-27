@@ -3,5 +3,5 @@ QAT-SPR/openssl-git
 QAT-SPR/QAT_Engine
 QAT-SPR/QATzip
 QAT-SPR/asynch_mode_nginx
-QAT-SPR/wrk-scripts/logs/
+#QAT-SPR/wrk-scripts/logs/
 QAT-SPR/wrk-scripts/1

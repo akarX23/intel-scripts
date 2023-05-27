@@ -1,0 +1,10 @@
+Running 2s test @ https://localhost:443
+  224 threads and 30700 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     8.97ms    4.16ms 100.74ms   74.34%
+    Req/Sec     2.54k     5.11k   58.78k    91.64%
+  1135522 requests in 2.10s, 358.45MB read
+  Socket errors: connect 2456, read 0, write 0, timeout 0
+  Non-2xx or 3xx responses: 1135522
+Requests/sec: 540791.46
+Transfer/sec:    170.71MB
