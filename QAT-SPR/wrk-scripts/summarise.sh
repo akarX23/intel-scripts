@@ -1,5 +1,22 @@
 #!/bin/bash
 
+log_dir=logs
+
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+  key="$1"
+  case $key in
+    --log-dir)
+      log_dir="$2"
+      shift # past argument
+      shift
+      ;;
+    *) # unknown option
+      shift # past argument
+      ;;
+  esac
+done
+
 # Function to get content type based on log file name
 get_content_type() {
   filename=$(basename "$1")
@@ -76,8 +93,6 @@ summarize_log_file() {
 
     if (( $(echo "$percent_change >= 0" | bc -l) )); then
       percent_change="+$percent_change"
-    else  
-      percent_change="-$percent_change"
     fi
 
   else
@@ -103,11 +118,11 @@ append_files() {
 
 
 # Get list of log files
-log_files=$(append_files "1MB" "100KB" "10KB" "logs")
+log_files=$(append_files "1MB" "100KB" "10KB" "$log_dir")
 
 # Check if log files exist
 if [ -z "$log_files" ]; then
-  echo "No wrk log files found in the logs directory."
+  echo "No wrk log files found in the $log_dir directory."
   exit 1
 fi
 
@@ -121,7 +136,7 @@ echo "+$(printf "%0.s-" $(seq 1 $table_width))+"
 
 # Process each log file
 for log_file in $log_files; do
-  summarize_log_file "logs/$log_file"
+  summarize_log_file "$log_dir/$log_file"
 done
 
 # Print table footer
