@@ -74,8 +74,8 @@ echo "+++++++++++++++++++++++++++++++++++++++++++++"
 echo "Running with QAT Enabled"
 echo "+++++++++++++++++++++++++++++++++++++++++++++"
 
-$nginx_bin_path -s stop
-$nginx_bin_path -c $nginx_qat_conf_path
+eval $nginx_bin_path -s stop
+eval $nginx_bin_path -c $nginx_qat_conf_path
 
 run_workloads --with-qat
 
@@ -83,8 +83,8 @@ echo "+++++++++++++++++++++++++++++++++++++++++++++"
 echo "Running without QAT Enabled"
 echo "+++++++++++++++++++++++++++++++++++++++++++++"
 
-$nginx_bin_path -s stop
-$nginx_bin_path -c $nginx_wqat_cong_path
+eval $nginx_bin_path -s stop
+eval $nginx_bin_path -c $nginx_wqat_cong_path
 
 run_workloads
 
