@@ -4,10 +4,8 @@ ulimit -n 655350
 
 # Default values
 server="localhost:443"
-with_qat=
 duration=120
 nginx_bin_path="/usr/local/nginx"
-nginx_conf_path="/etc/nginx"
 nginx_qat_conf_path="/etc/nginx/qat"
 nginx_wqat_cong_path="/etc/nginx/nginx.conf"
 
@@ -25,17 +23,8 @@ while [[ $# -gt 0 ]]; do
       shift # past argument
       shift # past value
       ;;
-    --with-qat)
-      with_qat=true
-      shift # past argument
-      ;;
     --nginx-bin-path)
       nginx_bin_path="$2"
-      shift # past argument
-      shift # past value
-      ;;
-    --nginx-conf-path)
-      nginx_conf_path="$2"
       shift # past argument
       shift # past value
       ;;
@@ -59,11 +48,6 @@ done
 if [ -z "$server" ]; then
   echo "Usage: $0 --server <IP address:PORT(443)> --duration <duration in seconds> [--with-qat]"
   exit 1
-fi
-
-qat_arg=""
-if [ "$with_qat" = true ]; then
-  qat_arg="--with-qat"
 fi
 
 run_workloads () {
@@ -90,21 +74,19 @@ echo "+++++++++++++++++++++++++++++++++++++++++++++"
 echo "Running with QAT Enabled"
 echo "+++++++++++++++++++++++++++++++++++++++++++++"
 
-run_workloads $qat_arg
+$nginx_bin_path -s stop
+$nginx_bin_path -c $nginx_qat_conf_path
 
-if [ "$with_qat" = true ]; then
-  cp $nginx_wqat_cong_path $nginx_conf_path
-else
-  cp $nginx_qat_conf_path $nginx_conf_path
-  $qat_arg="--with-qat"
-fi
-$nginx_bin_path -s reload
+run_workloads --with-qat
 
 echo "+++++++++++++++++++++++++++++++++++++++++++++"
 echo "Running without QAT Enabled"
 echo "+++++++++++++++++++++++++++++++++++++++++++++"
 
-run_workloads $qat_arg
+$nginx_bin_path -s stop
+$nginx_bin_path -c $nginx_wqat_cong_path
+
+run_workloads
 
 echo "============================================="
 echo "---------------------------------------------"
