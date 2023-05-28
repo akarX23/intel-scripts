@@ -80,21 +80,24 @@ summarize_log_file() {
     # Get the corresponding log file without QAT
     log_file_without_qat="${1/qat_/}"
 
-    # Get the total data transfer without QAT
-    total_data_without_qat=$(cat "$log_file_without_qat" | awk '/ requests in / {print $5}')
+    if [[ -e "$log_file_without_qat" ]]; then
+      # Get the total data transfer without QAT
+      total_data_without_qat=$(cat "$log_file_without_qat" | awk '/ requests in / {print $5}')
 
-    # Extracting the digits from $total_data and storing as floating-point number
-    total_data_float=$(echo "$total_data" | sed 's/MB$//' | awk '{ printf "%.2f", $0 }')
+      # Extracting the digits from $total_data and storing as floating-point number
+      total_data_float=$(echo "$total_data" | sed 's/MB$//' | awk '{ printf "%.2f", $0 }')
 
-    # Extracting the digits from $total_data_without_qat and storing as floating-point number
-    total_data_without_qat_float=$(echo "$total_data_without_qat" | sed 's/MB$//' | awk '{ printf "%.2f", $0 }')
+      # Extracting the digits from $total_data_without_qat and storing as floating-point number
+      total_data_without_qat_float=$(echo "$total_data_without_qat" | sed 's/MB$//' | awk '{ printf "%.2f", $0 }')
 
-    percent_change=$(echo "scale=2; (($total_data_float - $total_data_without_qat_float) / $total_data_without_qat_float) * 100" | bc)
+      percent_change=$(echo "scale=2; (($total_data_float - $total_data_without_qat_float) / $total_data_without_qat_float) * 100" | bc)
 
-    if (( $(echo "$percent_change >= 0" | bc -l) )); then
-      percent_change="+$percent_change"
+      if (( $(echo "$percent_change >= 0" | bc -l) )); then
+        percent_change="+$percent_change"
+      fi
+    else
+      percent_change="-"
     fi
-
   else
     percent_change="-"
   fi

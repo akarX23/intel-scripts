@@ -1,0 +1,14 @@
+Running 5s test @ https://google.com
+  12 threads and 400 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    90.25ms   43.31ms 499.77ms   81.29%
+    Req/Sec   362.71     97.12   565.00     77.47%
+  Latency Distribution
+     50%   75.10ms
+     75%  116.59ms
+     90%  148.96ms
+     99%  220.48ms
+  20921 requests in 5.06s, 16.60MB read
+  Socket errors: connect 0, read 0, write 0, timeout 1
+Requests/sec:   4131.40
+Transfer/sec:      3.28MB
