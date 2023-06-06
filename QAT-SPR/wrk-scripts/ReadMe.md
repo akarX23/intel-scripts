@@ -55,5 +55,5 @@ cat run-wrk.sh
 ./summarise.sh
 
 # Print results for 15 mins benchmark
-./summarise.sh prod-logs/
+./summarise.sh --log-dir prod-logs/
 ```
