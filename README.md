@@ -16,4 +16,4 @@ cd svr-info
 ```
 ./svr-info -all
 ```
-- Results will be found in svr-info_TIMESTAMP, the html file will contain all the data in a formatted, easily readable format
+- Results will be found in svr-info_TIMESTAMP, the html file will contain all the data in a formatted, easily readable format.
