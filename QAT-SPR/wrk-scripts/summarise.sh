@@ -30,12 +30,12 @@ get_content_type() {
   fi
   
   # Extract content type
-  if [[ $filename == *qat_video* ]]; then
-    content_type="Video query with QAT"
-  elif [[ $filename == *qat_query* ]]; then
+  # if [[ $filename == *qat_video* ]]; then
+  #   content_type="Video query with QAT"
+  if [[ $filename == *qat_query* ]]; then
     content_type="Normal query with QAT"
-  elif [[ $filename == *video* ]]; then
-    content_type="Video query w/o QAT"
+  # elif [[ $filename == *video* ]]; then
+  #   content_type="Video query w/o QAT"
   elif [[ $filename == *query* ]]; then
     content_type="Normal query w/o QAT"
   fi

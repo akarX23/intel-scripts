@@ -97,20 +97,20 @@ mkdir logs 2>1
 
 # Run wrk and save output to log file
 
-echo -e "\nExecuting normal query script"
+echo -e "\nExecuting query script"
 log_file="${size}${with_qat}_query.log"
 wrk -t $threads -c $connections -d ${duration}s -s ./${size}_query.lua -L --timeout 4s \
  -H "Connection: keep-alive" "https://$server" > "logs/$log_file" 2>&1 &
 pid=$!
 countdown $duration $pid
 
-echo -e "\n"
+# echo -e "\n"
 
-echo -e "Executing video query script"
-log_file="${size}${with_qat}_video_query.log"
-wrk -t $threads -c $connections -d ${duration}s -s ./${size}_video_query.lua -L --timeout 4s \
- -H "Connection: keep-alive" "https://$server" > "logs/$log_file" 2>&1 &
-pid=$!
-countdown $duration $pid
+# echo -e "Executing video query script"
+# log_file="${size}${with_qat}_video_query.log"
+# wrk -t $threads -c $connections -d ${duration}s -s ./${size}_video_query.lua -L --timeout 4s \
+#  -H "Connection: keep-alive" "https://$server" > "logs/$log_file" 2>&1 &
+# pid=$!
+# countdown $duration $pid
 
 echo -e "\nWrk script executed for $size. Logs saved under logs/ directory."
