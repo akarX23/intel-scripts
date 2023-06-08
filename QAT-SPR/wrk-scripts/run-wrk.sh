@@ -49,11 +49,15 @@ case $size in
     threads=$(nproc)
     connections=30700
     ;;
-  10KB)
+  256KB)
     threads=$(nproc)
     connections=3100
     ;;
   100KB)
+    threads=$(nproc)
+    connections=6200
+    ;;
+  750KB)
     threads=$(nproc)
     connections=6200
     ;;
