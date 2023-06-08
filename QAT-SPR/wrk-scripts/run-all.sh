@@ -52,15 +52,21 @@ fi
 
 run_workloads () {
 echo "---------------------------------------------"
-echo "Running wrk with 10KB size"
+echo "Running wrk with 100KB size"
 echo "---------------------------------------------"
-./run-wrk.sh --server $server --size 10KB --duration $duration $1  
+./run-wrk.sh --server $server --size 100KB --duration $duration $1  
 echo
 
 echo "---------------------------------------------"
-echo "Running wrk with 100KB size"
+echo "Running wrk with 256KB size"
 echo "---------------------------------------------"
-./run-wrk.sh --server $server --size 100KB --duration $duration $1 
+./run-wrk.sh --server $server --size 256KB --duration $duration $1 
+echo
+
+echo "---------------------------------------------"
+echo "Running wrk with 750KB size"
+echo "---------------------------------------------"
+./run-wrk.sh --server $server --size 750KB --duration $duration $1 
 echo
 
 echo "---------------------------------------------"

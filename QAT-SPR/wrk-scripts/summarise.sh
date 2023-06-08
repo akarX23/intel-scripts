@@ -33,11 +33,11 @@ get_content_type() {
   # if [[ $filename == *qat_video* ]]; then
   #   content_type="Video query with QAT"
   if [[ $filename == *qat_query* ]]; then
-    content_type="Normal query with QAT"
+    content_type="QAT Enabled"
   # elif [[ $filename == *video* ]]; then
   #   content_type="Video query w/o QAT"
   elif [[ $filename == *query* ]]; then
-    content_type="Normal query w/o QAT"
+    content_type="QAT Disabled"
   fi
 
   # Return file size and content type as an array
@@ -115,7 +115,7 @@ append_files() {
 
 
 # Get list of log files
-log_files=$(append_files "1MB" "100KB" "10KB" "$log_dir")
+log_files=$(append_files "1MB" "750KB" "256KB" "100KB" "$log_dir")
 
 # Check if log files exist
 if [ -z "$log_files" ]; then
