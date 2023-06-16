@@ -22,7 +22,7 @@ export no_proxy="127.0.0.1,localhost"
 export HTTP_PROXY="http://proxy01.iind.intel.com:911/"
 export HTTPS_PROXY="http://proxy01.iind.intel.com:912/"
 export FTP_PROXY="ftp://proxy-us.intel.com:911/"
-export NO_PROXY="127.0.0.1,localhost"
+export NO_PROXY=\$no_proxy
 
 EOT
 
