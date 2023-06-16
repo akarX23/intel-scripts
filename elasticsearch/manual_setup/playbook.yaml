@@ -1,0 +1,64 @@
+- name: Setup Elasticsearch
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Install Elasticsearch through .deb package
+      script: ./install_es.sh
+      become_user: ubuntu
+      become: true
+
+    - name: Turn off swap
+      command: swapoff -a
+      tags: sysctl
+      become_user: root
+
+    - name: Increase the number of memory maps available to OpenSearch
+      lineinfile:
+        path: /etc/sysctl.conf
+        line: "vm.max_map_count=262144"
+        insertafter: EOF
+        state: present
+      become: true
+      tags: sysctl
+
+    - name: Reload sysctl
+      command: sysctl -p
+      tags: sysctl
+      become: true
+
+    - name: Update no_proxy setting
+      lineinfile:
+        path: /etc/profile.d/proxy_setup.sh
+        line: "export no_proxy=127.0.0.1,localhost,{% for host in groups['all'] %}{{ hostvars[host]['ansible_host'] }}{% if not loop.last %},{% endif %}{% endfor %}"
+        search_string: "export no_proxy"
+        state: present
+      tags: proxy
+      become_user: root
+
+    - name: Update NO_PROXY setting
+      lineinfile:
+        path: /etc/profile.d/proxy_setup.sh
+        line: "export NO_PROXY=127.0.0.1,localhost,{% for host in groups['all'] %}{{ hostvars[host]['ansible_host'] }}{% if not loop.last %},{% endif %}{% endfor %}"
+        search_string: "export NO_PROXY"
+        state: present
+      tags: proxy
+      become_user: root
+
+    - name: Generate the config file for elasticsearch
+      script: |
+        ./gen_es_config.sh \
+        --cluster "{{ cluster_name | default('es-cluster') }}"  \
+        --node os-"{{ inventory_hostname }}"  \
+        --roles "{{ 'master' if 'manager' in inventory_hostname else 'data,ingest' }}"  \
+        --managers "{% for host in groups['cluster_manager'] %}{{ hostvars[host]['ansible_host'] }}{% if not loop.last %},{% endif %}{% endfor %}"  \
+        --data "{% for host in groups['cluster_data'] %}{{ hostvars[host]['ansible_host'] }}{% if not loop.last %},{% endif %}{% endfor %}"
+
+    - name: Configure performance settings
+      script: ./perf_config.sh
+
+    - name: Start and enable elasticsearch service
+      systemd:
+        name: elasticsearch.service
+        state: started
+        enabled: yes
