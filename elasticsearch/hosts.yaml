@@ -1,25 +1,25 @@
 all:
   hosts:
     manager1:
-      ansible_host: 192.168.122.252
-      ip: 192.168.122.252
-      access_ip: 192.168.122.252
+      ansible_host: 192.168.122.232
+      ip: 192.168.122.232
+      access_ip: 192.168.122.232
     manager2:
-      ansible_host: 192.168.122.199
-      ip: 192.168.122.199
-      access_ip: 192.168.122.199
+      ansible_host: 192.168.122.46
+      ip: 192.168.122.46
+      access_ip: 192.168.122.46
     manager3:
-      ansible_host: 192.168.122.123
-      ip: 192.168.122.123
-      access_ip: 192.168.122.123
+      ansible_host: 192.168.122.133
+      ip: 192.168.122.133
+      access_ip: 192.168.122.133
     data1:
-      ansible_host: 192.168.122.160
-      ip: 192.168.122.160
-      access_ip: 192.168.122.160
+      ansible_host: 192.168.122.87
+      ip: 192.168.122.87
+      access_ip: 192.168.122.87
     data2:
-      ansible_host: 192.168.122.190
-      ip: 192.168.122.190
-      access_ip: 192.168.122.190
+      ansible_host: 192.168.122.151
+      ip: 192.168.122.151
+      access_ip: 192.168.122.151
   children:
     cluster_manager:
       hosts:

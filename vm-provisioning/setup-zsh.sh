@@ -32,17 +32,11 @@ setup_zsh_for_user() {
 }
 
 # Install ZSH for all users if specified
-if [ "$1" == "--all-users" ]; then
+if [ "$1" == "--all-users" ] || [ -z "$1" ]; then
   for user in $(ls /home); do
     setup_zsh_for_user "$user"
   done
 else
-  # Check if user argument is provided
-  if [ -z "$1" ]; then
-    echo "Please provide a user as an argument or use the --all-users flag to install ZSH for all users."
-    exit 1
-  fi
-
   # Check if the user exists
   if id "$1" >/dev/null 2>&1; then
     setup_zsh_for_user "$1"
