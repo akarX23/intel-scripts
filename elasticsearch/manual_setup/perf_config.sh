@@ -18,7 +18,7 @@ echo "elasticsearch hard memlock unlimited" >> /etc/security/limits.conf
 echo "elasticsearch hard nofile 65536" >> /etc/security/limits.conf
 echo "elasticsearch soft nofile 65536" >> /etc/security/limits.conf
 
-sed -i "s/#OPENSEARCH_JAVA_OPTS=/OPENSEARCH_JAVA_OPTS=\"-Xms${av_ram} -Xmx${av_ram}\"/g" /etc/sysconfig/elasticsearch
+sed -i "s/#ELASTICSEARCH_JAVA_OPTS=/ELASTICSEARCH_JAVA_OPTS=\"-Xms${av_ram} -Xmx${av_ram}\"/g" /etc/sysconfig/elasticsearch
 sed -i "s/#MAX_LOCKED_MEMORY=unlimited/MAX_LOCKED_MEMORY=unlimited/g" /etc/sysconfig/elasticsearch
 
 # Check if the LimitMEMLOCK setting is already present in elasticsearch.service
