@@ -14,7 +14,7 @@ export NO_PROXY="127.0.0.1,localhost"
 DEB_FILE="opensearch-2.6.0-linux-x64.deb"
 
 if [ ! -f "$DEB_FILE" ]; then
-  wget https://artifacts.elastic.co/downloads/elasticsearch/opensearch-2.6.0-linux-x64.deb
+  wget https://artifacts.elastic.co/downloads/opensearch/opensearch-2.6.0-linux-x64.deb
   sudo dpkg -i opensearch-2.6.0-linux-x64.deb
 fi
 
