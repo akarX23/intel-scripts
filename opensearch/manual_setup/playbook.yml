@@ -33,7 +33,8 @@
         line: "export no_proxy=127.0.0.1,localhost,{% for host in groups['all'] %}{{ hostvars[host]['ansible_host'] }}{% if not loop.last %},{% endif %}{% endfor %}"
         search_string: "export no_proxy"
         state: present
-      tags: proxy
+      tags: proxy      
+      ignore_errors: true
       become_user: root
 
     - name: Update NO_PROXY setting
@@ -42,7 +43,8 @@
         line: "export NO_PROXY=127.0.0.1,localhost,{% for host in groups['all'] %}{{ hostvars[host]['ansible_host'] }}{% if not loop.last %},{% endif %}{% endfor %}"
         search_string: "export NO_PROXY"
         state: present
-      tags: proxy
+      tags: proxy      
+      ignore_errors: true
       become_user: root
 
     - name: Generate the config file for opensearch
