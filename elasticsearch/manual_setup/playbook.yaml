@@ -1,10 +1,10 @@
-- name: Setup Opensearch
+- name: Setup Elasticsearch
   hosts: all
   become: true
 
   tasks:
-    - name: Install Opensearch through .deb package
-      script: ./install_opensearch_manual.sh
+    - name: Install Elasticsearch through .deb package
+      script: ./install_es.sh
       become_user: ubuntu
       become: true
 
@@ -45,20 +45,20 @@
       tags: proxy
       become_user: root
 
-    - name: Generate the config file for opensearch
+    - name: Generate the config file for elasticsearch
       script: |
-        ./gen_os_config.sh \
-        --cluster "{{ cluster_name | default('os-cluster') }}"  \
+        ./gen_es_config.sh \
+        --cluster "{{ cluster_name | default('es-cluster') }}"  \
         --node os-"{{ inventory_hostname }}"  \
-        --roles "{{ 'cluster_manager' if 'manager' in inventory_hostname else 'data,ingest' }}"  \
+        --roles "{{ 'master' if 'manager' in inventory_hostname else 'data,ingest' }}"  \
         --managers "{% for host in groups['cluster_manager'] %}{{ hostvars[host]['ansible_host'] }}{% if not loop.last %},{% endif %}{% endfor %}"  \
         --data "{% for host in groups['cluster_data'] %}{{ hostvars[host]['ansible_host'] }}{% if not loop.last %},{% endif %}{% endfor %}"
 
     - name: Configure performance settings
       script: ./perf_config.sh
 
-    - name: Start and enable opensearch service
+    - name: Start and enable elasticsearch service
       systemd:
-        name: opensearch.service
+        name: elasticsearch.service
         state: started
         enabled: yes

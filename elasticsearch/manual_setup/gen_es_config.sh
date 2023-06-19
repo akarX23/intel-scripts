@@ -38,9 +38,9 @@ case $key in
 esac
 done
 
-rm /etc/opensearch/opensearch.yml
+rm /etc/elasticsearch/elasticsearch.yml
 
-cat > /etc/opensearch/opensearch.yml <<EOF
+cat > /etc/elasticsearch/elasticsearch.yml <<EOF
 
 cluster.name: ${CLUSTER_NAME}
 node.name: ${NODE_NAME}
@@ -48,9 +48,17 @@ node.roles: ${NODE_ROLES}
 discovery.seed_hosts: ${MANAGER_HOSTS},${DATA_HOSTS}
 cluster.initial_master_nodes: ${MANAGER_HOSTS}
 network.host: 0.0.0.0
-plugins.security.disabled: true
 bootstrap.memory_lock: true
+path.data: /var/lib/elasticsearch
+path.logs: /var/log/elasticsearch
+action.auto_create_index: true
+transport.port: 9300
+http.port: 9200
+
+xpack.security.transport.ssl.enabled: false
+xpack.security.enabled: false
+xpack.security.http.ssl.enabled: false
 
 EOF
 
-chown opensearch:opensearch  /etc/opensearch/opensearch.yml
+chown elasticsearch:elasticsearch /etc/elasticsearch/elasticsearch.yml
