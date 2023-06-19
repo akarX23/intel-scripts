@@ -86,7 +86,7 @@ summarize_log_file() {
   else
     percent_change="-"
   fi
-  printf "| %8s | %25s | %10s | %13s | %10s | %20s | %10s | %20s | %10s | %13s | %10s | %10s |\n" $file_size "$content_type" $threads   $connections   $duration  $total_requests   $requests_sec  $total_data  $data_sec  $ninety_ninth_p  $max_requests  $percent_change
+  printf "| %8s | %10s | %13s | %10s | %20s | %10s | %20s | %10s | %13s | %10s | %10s |\n" $file_size $threads   $connections   $duration  $total_requests   $requests_sec  $total_data  $data_sec  $ninety_ninth_p  $max_requests  $percent_change
 }
 
 append_files() {
@@ -95,9 +95,7 @@ append_files() {
     local sizes=("${@:1:$#-1}")  # All arguments except the last one are sizes
 
     for size in "${sizes[@]}"; do
-        files+=($(ls "$directory" | grep "$size"_qat_v))
         files+=($(ls "$directory" | grep "$size"_v))
-        files+=($(ls "$directory" | grep "$size"_qat_q))
         files+=($(ls "$directory" | grep "$size"_qu))
     done
 
@@ -119,7 +117,7 @@ table_width=194
 
 # Print table header
 echo "+$(printf "%0.s-" $(seq 1 $table_width))+"
-printf "| %8s | %25s | %10s | %13s | %10s | %20s | %10s | %20s | %10s | %13s | %10s | %10s |\n" "Workload" "Type" "Threads" "Connections" "Duration" "Total Requests" "Requests/s" "Total Data Transfer" "Transfer/s" "99% Latency" "Max Req/s" "% Change"
+printf "| %8s | %10s | %13s | %10s | %20s | %10s | %20s | %10s | %13s | %10s | %10s |\n" "Workload" "Threads" "Connections" "Duration" "Total Requests" "Requests/s" "Total Data Transfer" "Transfer/s" "99% Latency" "Max Req/s" "% Change"
 echo "+$(printf "%0.s-" $(seq 1 $table_width))+"
 
 # Process each log file
