@@ -94,6 +94,7 @@ fi
 table_width=194
 
 touch wrk.csv
+echo "size,threads,connections,duration,total_requests,requests_sec,total_data,data_sec,ninety_ninth_p,max_requests" >> wrk.csv
 
 # Print table header
 echo "+$(printf "%0.s-" $(seq 1 $table_width))+"
