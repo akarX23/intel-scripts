@@ -42,19 +42,19 @@ fi
 case $size in
   1MB)
     threads=$(nproc)
-    connections=30700
+    connections=1000
     ;;
   256KB)
     threads=$(nproc)
-    connections=3100
+    connections=1000
     ;;
   100KB)
     threads=$(nproc)
-    connections=6200
+    connections=1000
     ;;
   750KB)
     threads=$(nproc)
-    connections=6200
+    connections=1000
     ;;
   *)
     echo "Invalid size. Please choose either 1MB, 10KB, or 100KB."
