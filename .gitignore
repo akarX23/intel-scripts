@@ -9,3 +9,5 @@ QAT-SPR/wrk-scripts/prod-logs
 
 nginx/logs/
 nginx/1
+nginx/logs-history
+nginx/*.csv

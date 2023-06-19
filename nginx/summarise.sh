@@ -63,6 +63,7 @@ summarize_log_file() {
   # Access the file size and content type from the array
   file_size="${result[0]}"
 
+  echo "$file_size,$threads,$connections,$duration,$total_requests,$requests_sec,$total_data,$data_sec,$ninety_ninth_p,$max_requests" >> wrk.csv
   printf "| %8s | %10s | %13s | %10s | %20s | %10s | %20s | %10s | %13s | %10s |\n" $file_size $threads   $connections   $duration  $total_requests   $requests_sec  $total_data  $data_sec  $ninety_ninth_p  $max_requests
 }
 
@@ -91,6 +92,8 @@ fi
 
 # Calculate the width of the table
 table_width=194
+
+touch wrk.csv
 
 # Print table header
 echo "+$(printf "%0.s-" $(seq 1 $table_width))+"
