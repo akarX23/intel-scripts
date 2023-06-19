@@ -64,29 +64,8 @@ summarize_log_file() {
 
   # Access the file size and content type from the array
   file_size="${result[0]}"
-  content_type="${result[@]:1}"
 
-  # Calculate the percentage change in total data transfer if "_qat" is present in the file name
-  if [[ "$1" == *_qat_* ]]; then
-    # Get the corresponding log file without QAT
-    log_file_without_qat="${1/qat_/}"
-
-    if [[ -e "$log_file_without_qat" ]]; then
-      # Get the total data transfer without QAT
-      total_requests_without_qat=$(cat "$log_file_without_qat" | awk '/ requests in / {print $1}')
-
-      percent_change=$(echo "scale=2; (($total_requests - $total_requests_without_qat) / $total_requests_without_qat) * 100" | bc)
-
-      if (( $(echo "$percent_change >= 0" | bc -l) )); then
-        percent_change="+$percent_change"
-      fi
-    else
-      percent_change="-"
-    fi
-  else
-    percent_change="-"
-  fi
-  printf "| %8s | %10s | %13s | %10s | %20s | %10s | %20s | %10s | %13s | %10s | %10s |\n" $file_size $threads   $connections   $duration  $total_requests   $requests_sec  $total_data  $data_sec  $ninety_ninth_p  $max_requests  $percent_change
+  printf "| %8s | %10s | %13s | %10s | %20s | %10s | %20s | %10s | %13s | %10s |\n" $file_size $threads   $connections   $duration  $total_requests   $requests_sec  $total_data  $data_sec  $ninety_ninth_p  $max_requests
 }
 
 append_files() {
@@ -117,7 +96,7 @@ table_width=194
 
 # Print table header
 echo "+$(printf "%0.s-" $(seq 1 $table_width))+"
-printf "| %8s | %10s | %13s | %10s | %20s | %10s | %20s | %10s | %13s | %10s | %10s |\n" "Workload" "Threads" "Connections" "Duration" "Total Requests" "Requests/s" "Total Data Transfer" "Transfer/s" "99% Latency" "Max Req/s" "% Change"
+printf "| %8s | %10s | %13s | %10s | %20s | %10s | %20s | %10s | %13s | %10s |\n" "Workload" "Threads" "Connections" "Duration" "Total Requests" "Requests/s" "Total Data Transfer" "Transfer/s" "99% Latency" "Max Req/s"
 echo "+$(printf "%0.s-" $(seq 1 $table_width))+"
 
 # Process each log file
