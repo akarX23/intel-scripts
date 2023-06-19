@@ -6,3 +6,6 @@ QAT-SPR/asynch_mode_nginx
 QAT-SPR/wrk-scripts/logs/
 QAT-SPR/wrk-scripts/1
 QAT-SPR/wrk-scripts/prod-logs
+
+nginx/logs/
+nginx/1

@@ -28,11 +28,9 @@ get_content_type() {
   elif [[ $filename =~ [0-9]+MB ]]; then
     file_size="${BASH_REMATCH[0]}"
   fi
-  
-    content_type="QAT Disabled"
 
   # Return file size and content type as an array
-  arr=("$file_size" "$content_type")
+  arr=("$file_size")
   echo "${arr[@]}"
 }
 

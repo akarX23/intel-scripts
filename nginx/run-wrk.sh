@@ -63,7 +63,7 @@ case $size in
 esac
 
 echo -e "Executing test for a $size workload with the following parameters:\n\n"
-echo -e "Server URL: http://$server"
+echo -e "Server URL: $server"
 echo -e "Size: $size"
 echo -e "Duration: ${duration}s"
 echo -e "Threads: $threads"
@@ -99,7 +99,7 @@ mkdir logs 2>1
 echo -e "\nExecuting WRK test"
 log_file="${size}_query.log"
 wrk -t $threads -c $connections -d ${duration}s  -L --timeout 4s \
- -H "Connection: keep-alive" "http://$server/$size" > "logs/$log_file" 2>&1 &
+ -H "Connection: keep-alive" "$server/$size" > "logs/$log_file" 2>&1 &
 pid=$!
 countdown $duration $pid
 

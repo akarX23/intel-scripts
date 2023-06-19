@@ -3,7 +3,7 @@
 ulimit -n 655350
 
 # Default values
-server="localhost:443"
+server="https://localhost:443"
 duration=120
 nginx_bin_path="/usr/local/nginx"
 nginx_conf_path="/etc/nginx/nginx.conf"
