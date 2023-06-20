@@ -13,7 +13,7 @@
       tags: sysctl
       become_user: root
 
-    - name: Increase the number of memory maps available to OpenSearch
+    - name: Increase the number of memory maps available to Elasticsearch
       lineinfile:
         path: /etc/sysctl.conf
         line: "vm.max_map_count=262144"
