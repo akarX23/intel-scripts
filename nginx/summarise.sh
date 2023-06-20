@@ -93,6 +93,7 @@ fi
 # Calculate the width of the table
 table_width=194
 
+rm wrk.csv
 touch wrk.csv
 echo "size,threads,connections,duration,total_requests,requests_sec,total_data,data_sec,ninety_ninth_p,max_requests" >> wrk.csv
 
