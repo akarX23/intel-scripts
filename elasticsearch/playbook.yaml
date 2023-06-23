@@ -2,6 +2,7 @@
   roles:
     - role: elastic.elasticsearch
   vars:
+    es_version: 7.17.0
     es_config:
       cluster.name: "test-cluster"
       discovery.seed_hosts: "192.168.122.85:9300, 192.168.122.76:9300, 192.168.122.109:9300, 192.168.122.72:9300, 192.168.122.134:9300"
@@ -21,6 +22,7 @@
   roles:
     - role: elastic.elasticsearch
   vars:
+    es_version: 7.17.0
     es_config:
       cluster.name: "test-cluster"
       discovery.seed_hosts: "192.168.122.85:9300, 192.168.122.76:9300, 192.168.122.109:9300, 192.168.122.72:9300, 192.168.122.134:9300"
