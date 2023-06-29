@@ -1,25 +1,53 @@
 all:
   hosts:
     manager1:
-      ansible_host: 192.168.122.232
-      ip: 192.168.122.232
-      access_ip: 192.168.122.232
+      ansible_host: 192.168.122.136
+      ip: 192.168.122.136
+      access_ip: 192.168.122.136
     manager2:
-      ansible_host: 192.168.122.46
-      ip: 192.168.122.46
-      access_ip: 192.168.122.46
+      ansible_host: 192.168.122.183
+      ip: 192.168.122.183
+      access_ip: 192.168.122.183
     manager3:
-      ansible_host: 192.168.122.133
-      ip: 192.168.122.133
-      access_ip: 192.168.122.133
+      ansible_host: 192.168.122.233
+      ip: 192.168.122.233
+      access_ip: 192.168.122.233
     data1:
-      ansible_host: 192.168.122.87
-      ip: 192.168.122.87
-      access_ip: 192.168.122.87
+      ansible_host: 192.168.122.42
+      ip: 192.168.122.42
+      access_ip: 192.168.122.42
     data2:
-      ansible_host: 192.168.122.151
-      ip: 192.168.122.151
-      access_ip: 192.168.122.151
+      ansible_host: 192.168.122.66
+      ip: 192.168.122.66
+      access_ip: 192.168.122.66
+    data3:
+      ansible_host: 192.168.122.89
+      ip: 192.168.122.89
+      access_ip: 192.168.122.89
+    data4:
+      ansible_host: 192.168.122.51
+      ip: 192.168.122.51
+      access_ip: 192.168.122.51
+    data5:
+      ansible_host: 192.168.122.250
+      ip: 192.168.122.250
+      access_ip: 192.168.122.250
+    data6:
+      ansible_host: 192.168.122.105
+      ip: 192.168.122.105
+      access_ip: 192.168.122.105
+    data7:
+      ansible_host: 192.168.122.215
+      ip: 192.168.122.215
+      access_ip: 192.168.122.215
+    data8:
+      ansible_host: 192.168.122.35
+      ip: 192.168.122.35
+      access_ip: 192.168.122.35
+    data9:
+      ansible_host: 192.168.122.37
+      ip: 192.168.122.37
+      access_ip: 192.168.122.37
   children:
     cluster_manager:
       hosts:
@@ -30,3 +58,10 @@ all:
       hosts:
         data1:
         data2:
+        data3:
+        data4:
+        data5:
+        data6:
+        data7:
+        data8:
+        data9:

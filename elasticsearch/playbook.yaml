@@ -5,12 +5,12 @@
     es_version: 7.17.0
     es_config:
       cluster.name: "test-cluster"
-      discovery.seed_hosts: "192.168.122.85:9300, 192.168.122.76:9300, 192.168.122.109:9300, 192.168.122.72:9300, 192.168.122.134:9300"
+      discovery.seed_hosts: "192.168.122.136:9300,192.168.122.183:9300,192.168.122.250:9300,192.168.122.105:9300"
       http.port: 9200
       transport.port: 9300
-      node.roles: "master"
+      node.roles: ["master"]
       bootstrap.memory_lock: true
-      cluster.initial_master_nodes: "192.168.122.85:9300, 192.168.122.76:9300, 192.168.122.109:9300"
+      cluster.initial_master_nodes: "192.168.122.136:9300,192.168.122.183:9300,192.168.122.233:9300"
       network.host: 0.0.0.0
     es_heap_size: 8g
     es_enable_auto_ssl_configuration: false
@@ -25,12 +25,12 @@
     es_version: 7.17.0
     es_config:
       cluster.name: "test-cluster"
-      discovery.seed_hosts: "192.168.122.85:9300, 192.168.122.76:9300, 192.168.122.109:9300, 192.168.122.72:9300, 192.168.122.134:9300"
+      discovery.seed_hosts: "192.168.122.136:9300,192.168.122.183:9300,192.168.122.250:9300,192.168.122.105:9300"
       http.port: 9200
       transport.port: 9300
-      node.roles: "data,ingest"
+      node.roles: ["data","ingest"]
       bootstrap.memory_lock: true
-      cluster.initial_master_nodes: "192.168.122.85:9300, 192.168.122.76:9300, 192.168.122.109:9300"
+      cluster.initial_master_nodes: "192.168.122.136:9300,192.168.122.183:9300,192.168.122.233:9300"
       network.host: 0.0.0.0
     es_heap_size: 8g
     es_enable_auto_ssl_configuration: false
