@@ -1,0 +1,16 @@
+- name: Setup Elasticsearch
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Stop elasticsearch service
+      systemd:
+        name: elasticsearch.service
+        state: stopped
+        enabled: yes
+
+    - name: Stop elasticsearch service
+      systemd:
+        name: elasticsearch.service
+        state: started
+        enabled: yes
