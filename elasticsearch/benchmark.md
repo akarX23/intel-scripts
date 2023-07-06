@@ -1,4 +1,3 @@
-
 # ES Benchmarking plan
 This guide assumes you have Kibana and esrally configured in separate VMs.
 
@@ -85,3 +84,25 @@ Now use the same command and keep the `bulk_size` fixed and increase the `bulk-i
 
 Once you find the `bulk_size` and the `bulk_indexing_clients` you will have the maximum throughput your cluster can handle at its current state. Any more throughput will require more nodes to be added.
 
+### Searching Benchmark
+For the search, we will execute three benchmarks:
+
+#### 1. Service time for queries
+
+We will compare the service time (90 percentiles) for a set of queries depending on the track we are using.	
+#### 2. Service time for parallel queries
+
+Then we see the effect on the service time when we run all the queries in parallel.
+#### 3. Index rate and service time with parallel indexing
+
+We'll execute a  parallel  indexing task and the searches to see the indexing rate and the service time for our queries. The number of clients for indexing will be the same as what we determined before, however, it will drop now since we are doing indexing and querying both.
+
+## Links for reference
+- [Benchmarking plan reference](https://www.elastic.co/blog/benchmarking-and-sizing-your-elasticsearch-cluster-for-logs-and-metrics)
+- [Tips for better benchmarks](https://www.elastic.co/blog/seven-tips-for-better-elasticsearch-benchmarks)
+- [Track structure](https://esrally.readthedocs.io/en/2.8.0/track.html)
+- [Instructions to create your own tracks](https://esrally.readthedocs.io/en/stable/adding_tracks.html#)
+- [Telemetry devices in ES Rally](https://esrally.readthedocs.io/en/stable/telemetry.html)
+- [Comparing two races](https://esrally.readthedocs.io/en/stable/tournament.html)
+- [Benchmark report summary](https://esrally.readthedocs.io/en/stable/summary_report.html)
+- 
