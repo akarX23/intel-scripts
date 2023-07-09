@@ -2,6 +2,9 @@
 
 ulimit -n 655350
 
+echo "Flushing System cache"
+sync; echo 3 > /proc/sys/vm/drop_caches
+
 # Default values
 server="localhost:443"
 duration=120
@@ -57,11 +60,17 @@ echo "---------------------------------------------"
 ./run-wrk.sh --server $server --size 100KB --duration $duration $1  
 echo
 
+echo "Flushing System cache"
+# sync; echo 3 > /proc/sys/vm/drop_caches
+
 echo "---------------------------------------------"
 echo "Running wrk with 256KB size"
 echo "---------------------------------------------"
 ./run-wrk.sh --server $server --size 256KB --duration $duration $1 
 echo
+
+echo "Flushing System cache"
+# sync; echo 3 > /proc/sys/vm/drop_caches
 
 echo "---------------------------------------------"
 echo "Running wrk with 750KB size"
@@ -69,32 +78,47 @@ echo "---------------------------------------------"
 ./run-wrk.sh --server $server --size 750KB --duration $duration $1 
 echo
 
+echo "Flushing System cache"
+# sync; echo 3 > /proc/sys/vm/drop_caches
+
 echo "---------------------------------------------"
 echo "Running wrk with 1MB size"
 echo "---------------------------------------------"
 ./run-wrk.sh --server $server --size 1MB --duration $duration $1 
 echo
+
+echo "Flushing System cache"
+# sync; echo 3 > /proc/sys/vm/drop_caches
 }
+
+cat /sys/kernel/debug/qat_4xxx_0000:6b:00.0/fw_counters
 
 echo "+++++++++++++++++++++++++++++++++++++++++++++"
 echo "Running with QAT Enabled"
 echo "+++++++++++++++++++++++++++++++++++++++++++++"
 
 eval $nginx_bin_path -s stop
-sleep 1
+sleep 5
 eval $nginx_bin_path -c $nginx_qat_conf_path
 
 run_workloads --with-qat
+
+cat /sys/kernel/debug/qat_4xxx_0000:6b:00.0/fw_counters
 
 echo "+++++++++++++++++++++++++++++++++++++++++++++"
 echo "Running without QAT Enabled"
 echo "+++++++++++++++++++++++++++++++++++++++++++++"
 
+echo "Flushing System cache"
+# sync; echo 3 > /proc/sys/vm/drop_caches
+
 eval $nginx_bin_path -s stop
-sleep 1
+sleep 5
 eval $nginx_bin_path -c $nginx_wqat_cong_path
 
 run_workloads
+
+cat /sys/kernel/debug/qat_4xxx_0000:6b:00.0/fw_counters
 
 echo "============================================="
 echo "---------------------------------------------"
