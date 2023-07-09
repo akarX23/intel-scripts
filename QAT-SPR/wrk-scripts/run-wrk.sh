@@ -56,28 +56,24 @@ if [ -z "$server" ] || [ -z "$size" ]; then
 fi
 
 # Set threads and connections based on size
-# case $size in
-#   1MB)
-#     threads=$threads
-#     connections=2000
-#     ;;
-#   256KB)
-#     threads=$threads
-#     connections=2000
-#     ;;
-#   100KB)
-#     threads=$threads
-#     connections=2000
-#     ;;
-#   750KB)
-#     threads=$threads
-#     connections=2000
-#     ;;
-#   *)
-#     echo "Invalid size. Please choose either 1MB, 10KB, or 100KB."
-#     exit 1
-#     ;;
-# esac
+case $size in
+  1MB)
+    connections=350
+    ;;
+  256KB)
+    connections=350
+    ;;
+  100KB)
+    connections=300
+    ;;
+  750KB)
+    connections=300
+    ;;
+  *)
+    echo "Invalid size. Please choose either 1MB, 256KB, or 100KB."
+    exit 1
+    ;;
+esac
 
 echo -e "Executing test for a $size workload with the following parameters:\n\n"
 echo -e "Server URL: https://$server"
@@ -119,21 +115,5 @@ wrk -t $threads -c $connections -d ${duration}s  -L --timeout 4s \
  -H "Connection: keep-alive" "https://$server/$size" > "logs/$log_file" 2>&1 &
 pid=$!
 countdown $duration $pid
-
-# echo -e "\nExecuting query script"
-# log_file="${size}${with_qat}_query.log"
-# wrk -t $threads -c $connections -d ${duration}s -s ./${size}_query.lua -L --timeout 4s \
-#  -H "Connection: keep-alive" "https://$server" > "logs/$log_file" 2>&1 &
-# pid=$!
-# countdown $duration $pid
-
-# echo -e "\n"
-
-# echo -e "Executing video query script"
-# log_file="${size}${with_qat}_video_query.log"
-# wrk -t $threads -c $connections -d ${duration}s -s ./${size}_video_query.lua -L --timeout 4s \
-#  -H "Connection: keep-alive" "https://$server" > "logs/$log_file" 2>&1 &
-# pid=$!
-# countdown $duration $pid
 
 echo -e "\nWrk script executed for $size. Logs saved under logs/ directory."

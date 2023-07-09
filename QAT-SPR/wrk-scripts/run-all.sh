@@ -69,26 +69,26 @@ run_workloads () {
 echo "---------------------------------------------"
 echo "Running wrk with 100KB size"
 echo "---------------------------------------------"
-./run-wrk.sh --server $server --size 100KB --duration $duration --threads $threads --connections $connections $1
+numactl -C 56-111 ./run-wrk.sh --server $server --size 100KB --duration $duration --threads $threads --connections $connections $1
 echo
 
 echo "---------------------------------------------"
 echo "Running wrk with 256KB size"
 echo "---------------------------------------------"
-./run-wrk.sh --server $server --size 256KB --duration $duration --threads $threads --connections $connections $1
+numactl -C 56-111 ./run-wrk.sh --server $server --size 256KB --duration $duration --threads $threads --connections $connections $1
 echo
 
 echo "---------------------------------------------"
 echo "Running wrk with 750KB size"
 echo "---------------------------------------------"
-./run-wrk.sh --server $server --size 750KB --duration $duration --threads $threads --connections $connections $1
+numactl -C 56-111 ./run-wrk.sh --server $server --size 750KB --duration $duration --threads $threads --connections $connections $1
 echo
 
 
 echo "---------------------------------------------"
 echo "Running wrk with 1MB size"
 echo "---------------------------------------------"
-./run-wrk.sh --server $server --size 1MB --duration $duration --threads $threads --connections $connections $1
+numactl -C 16-55 ./run-wrk.sh --server $server --size 1MB --duration $duration --threads $threads --connections $connections $1
 echo
 
 }
