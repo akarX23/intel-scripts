@@ -7,6 +7,8 @@ server="localhost:443"
 size=""
 with_qat=""
 duration=120
+threads=28
+connections=2000
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -31,6 +33,16 @@ while [[ $# -gt 0 ]]; do
       with_qat="_qat"
       shift # past argument
       ;;
+    --threads)
+      threads="$2"
+      shift # past argument
+      shift # past value
+      ;;
+    --connections)
+      connections="$2"
+      shift # past argument
+      shift # past value
+      ;;
     *) # unknown option
       shift # past argument
       ;;
@@ -44,28 +56,28 @@ if [ -z "$server" ] || [ -z "$size" ]; then
 fi
 
 # Set threads and connections based on size
-case $size in
-  1MB)
-    threads=56
-    connections=1000
-    ;;
-  256KB)
-    threads=56
-    connections=1000
-    ;;
-  100KB)
-    threads=56
-    connections=1000
-    ;;
-  750KB)
-    threads=56
-    connections=1000
-    ;;
-  *)
-    echo "Invalid size. Please choose either 1MB, 10KB, or 100KB."
-    exit 1
-    ;;
-esac
+# case $size in
+#   1MB)
+#     threads=$threads
+#     connections=2000
+#     ;;
+#   256KB)
+#     threads=$threads
+#     connections=2000
+#     ;;
+#   100KB)
+#     threads=$threads
+#     connections=2000
+#     ;;
+#   750KB)
+#     threads=$threads
+#     connections=2000
+#     ;;
+#   *)
+#     echo "Invalid size. Please choose either 1MB, 10KB, or 100KB."
+#     exit 1
+#     ;;
+# esac
 
 echo -e "Executing test for a $size workload with the following parameters:\n\n"
 echo -e "Server URL: https://$server"

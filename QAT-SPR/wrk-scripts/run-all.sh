@@ -11,6 +11,8 @@ duration=120
 nginx_bin_path="/usr/local/nginx"
 nginx_qat_conf_path="/etc/nginx/qat"
 nginx_wqat_cong_path="/etc/nginx/nginx.conf"
+threads=28
+connections=2000
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -41,6 +43,16 @@ while [[ $# -gt 0 ]]; do
       shift # past argument
       shift # past value
       ;;
+    --threads)
+      threads="$2"
+      shift # past argument
+      shift # past value
+      ;;
+    --connections)
+      connections="$2"
+      shift # past argument
+      shift # past value
+      ;;
     *) # unknown option
       shift # past argument
       ;;
@@ -57,38 +69,32 @@ run_workloads () {
 echo "---------------------------------------------"
 echo "Running wrk with 100KB size"
 echo "---------------------------------------------"
-./run-wrk.sh --server $server --size 100KB --duration $duration $1  
+./run-wrk.sh --server $server --size 100KB --duration $duration --threads $threads --connections $connections $1  
 echo
-
-echo "Flushing System cache"
-# sync; echo 3 > /proc/sys/vm/drop_caches
 
 echo "---------------------------------------------"
 echo "Running wrk with 256KB size"
 echo "---------------------------------------------"
-./run-wrk.sh --server $server --size 256KB --duration $duration $1 
+./run-wrk.sh --server $server --size 256KB --duration $duration --threads $threads --connections $connections $1 
 echo
 
-echo "Flushing System cache"
-# sync; echo 3 > /proc/sys/vm/drop_caches
+
 
 echo "---------------------------------------------"
 echo "Running wrk with 750KB size"
 echo "---------------------------------------------"
-./run-wrk.sh --server $server --size 750KB --duration $duration $1 
+./run-wrk.sh --server $server --size 750KB --duration $duration --threads $threads --connections $connections $1 
 echo
 
-echo "Flushing System cache"
-# sync; echo 3 > /proc/sys/vm/drop_caches
+
 
 echo "---------------------------------------------"
 echo "Running wrk with 1MB size"
 echo "---------------------------------------------"
-./run-wrk.sh --server $server --size 1MB --duration $duration $1 
+./run-wrk.sh --server $server --size 1MB --duration $duration --threads $threads --connections $connections $1 
 echo
 
-echo "Flushing System cache"
-# sync; echo 3 > /proc/sys/vm/drop_caches
+
 }
 
 cat /sys/kernel/debug/qat_4xxx_0000:6b:00.0/fw_counters
@@ -110,7 +116,9 @@ echo "Running without QAT Enabled"
 echo "+++++++++++++++++++++++++++++++++++++++++++++"
 
 echo "Flushing System cache"
-# sync; echo 3 > /proc/sys/vm/drop_caches
+sync; echo 3 > /proc/sys/vm/drop_caches
+
+sleep 5
 
 eval $nginx_bin_path -s stop
 sleep 5
