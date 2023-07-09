@@ -21,14 +21,14 @@ done
 get_content_type() {
   filename=$(basename "$1")
   content_type=""
-  
+
   # Extract file size
   if [[ $filename =~ [0-9]+KB ]]; then
     file_size="${BASH_REMATCH[0]}"
   elif [[ $filename =~ [0-9]+MB ]]; then
     file_size="${BASH_REMATCH[0]}"
   fi
-  
+
   # Extract content type
   # if [[ $filename == *qat_video* ]]; then
   #   content_type="Video query with QAT"
@@ -95,7 +95,7 @@ summarize_log_file() {
   else
     percent_change="-"
   fi
-  printf "| %8s | %25s | %10s | %13s | %10s | %20s | %10s | %20s | %10s | %13s | %10s | %10s |\n" $file_size "$content_type" $threads   $connections   $duration  $total_requests   $requests_sec  $total_data  $data_sec  $ninety_ninth_p  $max_requests  $percent_change
+  printf "| %8s | %25s | %10s | %13s | %10s | %20s | %10s | %20s | %10s | %13s | %10s | %20s |\n" $file_size "$content_type" $threads   $connections   $duration  $total_requests   $requests_sec  $total_data  $data_sec  $ninety_ninth_p  $max_requests  $percent_change
 }
 
 append_files() {
@@ -124,11 +124,11 @@ if [ -z "$log_files" ]; then
 fi
 
 # Calculate the width of the table
-table_width=206
+table_width=204
 
 # Print table header
 echo "+$(printf "%0.s-" $(seq 1 $table_width))+"
-printf "| %8s | %25s | %10s | %13s | %10s | %20s | %10s | %20s | %10s | %13s | %10s | %10s |\n" "Workload" "Type" "Threads" "Connections" "Duration" "Total Requests" "Requests/s" "Total Data Transfer" "Transfer/s" "99% Latency" "Max Req/s" "% Change in Transfer"
+printf "| %8s | %25s | %10s | %13s | %10s | %20s | %10s | %20s | %10s | %13s | %10s | %15s |\n" "Workload" "Type" "Threads" "Connections" "Duration" "Total Requests" "Requests/s" "Total Data Transfer" "Transfer/s" "99% Latency" "Max Req/s" "% Change in Transfer"
 echo "+$(printf "%0.s-" $(seq 1 $table_width))+"
 
 # Process each log file
