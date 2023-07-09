@@ -88,7 +88,7 @@ echo
 echo "---------------------------------------------"
 echo "Running wrk with 1MB size"
 echo "---------------------------------------------"
-numactl -C 16-55 ./run-wrk.sh --server $server --size 1MB --duration $duration --threads $threads --connections $connections $1
+numactl -C 16-55 ./run-wrk.sh --server $server --size 1MB --duration $duration --threads 24 --connections $connections $1
 echo
 
 }

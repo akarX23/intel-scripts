@@ -124,11 +124,11 @@ if [ -z "$log_files" ]; then
 fi
 
 # Calculate the width of the table
-table_width=194
+table_width=206
 
 # Print table header
 echo "+$(printf "%0.s-" $(seq 1 $table_width))+"
-printf "| %8s | %25s | %10s | %13s | %10s | %20s | %10s | %20s | %10s | %13s | %10s | %10s |\n" "Workload" "Type" "Threads" "Connections" "Duration" "Total Requests" "Requests/s" "Total Data Transfer" "Transfer/s" "99% Latency" "Max Req/s" "% Change"
+printf "| %8s | %25s | %10s | %13s | %10s | %20s | %10s | %20s | %10s | %13s | %10s | %10s |\n" "Workload" "Type" "Threads" "Connections" "Duration" "Total Requests" "Requests/s" "Total Data Transfer" "Transfer/s" "99% Latency" "Max Req/s" "% Change in Transfer"
 echo "+$(printf "%0.s-" $(seq 1 $table_width))+"
 
 # Process each log file
