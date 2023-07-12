@@ -3,7 +3,7 @@
 ulimit -n 655350
 
 echo "Flushing System cache"
-sync; echo 3 > /proc/sys/vm/drop_caches
+sudo sh -c "sync;echo 3 > /proc/sys/vm/drop_caches"
 
 # Default values
 server="localhost:443"
@@ -66,30 +66,30 @@ if [ -z "$server" ]; then
 fi
 
 run_workloads () {
-echo "---------------------------------------------"
-echo "Running wrk with 100KB size"
-echo "---------------------------------------------"
-numactl -C 56-111 ./run-wrk.sh --server $server --size 100KB --duration $duration --threads $threads --connections $connections $1
-echo
+  echo "---------------------------------------------"
+  echo "Running wrk with 100KB size"
+  echo "---------------------------------------------"
+  numactl -C 56-111 ./run-wrk.sh --server $server --size 100KB --duration $duration --threads $threads --connections $connections $1
+  echo
 
-echo "---------------------------------------------"
-echo "Running wrk with 256KB size"
-echo "---------------------------------------------"
-numactl -C 56-111 ./run-wrk.sh --server $server --size 256KB --duration $duration --threads $threads --connections $connections $1
-echo
+  echo "---------------------------------------------"
+  echo "Running wrk with 256KB size"
+  echo "---------------------------------------------"
+  numactl -C 56-111 ./run-wrk.sh --server $server --size 256KB --duration $duration --threads $threads --connections $connections $1
+  echo
 
-echo "---------------------------------------------"
-echo "Running wrk with 750KB size"
-echo "---------------------------------------------"
-numactl -C 56-111 ./run-wrk.sh --server $server --size 750KB --duration $duration --threads $threads --connections $connections $1
-echo
+  echo "---------------------------------------------"
+  echo "Running wrk with 750KB size"
+  echo "---------------------------------------------"
+  numactl -C 56-111 ./run-wrk.sh --server $server --size 750KB --duration $duration --threads $threads --connections $connections $1
+  echo
 
 
-echo "---------------------------------------------"
-echo "Running wrk with 1MB size"
-echo "---------------------------------------------"
-numactl -C 16-55 ./run-wrk.sh --server $server --size 1MB --duration $duration --threads 24 --connections $connections $1
-echo
+  echo "---------------------------------------------"
+  echo "Running wrk with 1MB size"
+  echo "---------------------------------------------"
+  numactl -C 16-55 ./run-wrk.sh --server $server --size 1MB --duration $duration --threads 24 --connections $connections $1
+  echo
 
 }
 

@@ -40,7 +40,6 @@ step=1
 [[ $hyp -eq 0 ]] && for ((i = ${first}; i < ${step} * ${num_iax}; i += ${step})); do accel-config remove-mdev iax$i all 2> /dev/null;done #remove any mdev
 echo "first index: ${first}, step: ${step}, hyp: $hyp"
 
-
 #
 # disable iax wqs and devices
 #
