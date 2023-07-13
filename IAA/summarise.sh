@@ -1,6 +1,8 @@
 #!/bin/bash
 
 log_dir=logs
+VERBOSE=false
+
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -10,6 +12,10 @@ while [[ $# -gt 0 ]]; do
       log_dir="$2"
       shift # past argument
       shift
+      ;;
+    --verbose | -v)
+      VERBOSE=true
+      shift # past argument
       ;;
     *) # unknown option
       shift # past argument
@@ -40,16 +46,21 @@ do
     avg_p99_get_latency=$(echo "scale=2; $sum_p99_get_latency/$NUM_IAA" | bc)
     dbs_size=$(cat $log_dir/dbs_size_${test})
 
-    echo "Test: $(echo "$test" | tr '[:lower:]' '[:upper:]')"
+    if [[ "$VERBOSE" = true ]]; then
+      echo "Test: $(echo "$test" | tr '[:lower:]' '[:upper:]')"
+    fi
+  
     for index in "${!metrics[@]}"
     do
         metric="${metrics[${index}]}"
         header="${metric_headers[${index}]}"
 
         extracted_values["${metric}_${test}"]=$(eval echo "\${${metric}}")
-        echo "$header: ${extracted_values["${metric}_${test}"]}"
+
+        if [[ "$VERBOSE" = true ]]; then
+          echo "$header: ${extracted_values["${metric}_${test}"]}"
+        fi
     done
-    
     echo
 done
 
