@@ -2,9 +2,6 @@
 
 ulimit -n 655350
 
-echo -e "Flushing System cache\n"
-sudo sh -c "sync;echo 3 > /proc/sys/vm/drop_caches"
-
 # Default values
 server="localhost:443"
 duration=10
