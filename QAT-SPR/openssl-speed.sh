@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Shutting down any nginx processes
-ps aux | grep nginx | awk '{print $2}' | xargs kill
+ps aux | grep nginx | awk '{print $2}' | xargs kill 2> /dev/null
 
 # Replacing QAT config and restart QAT
 cp /home/akarx/QAT-installs/Engine/qat_hw_config/4xxx/multi_process/4xxx_dev0.conf /etc/4xxx_dev1.conf
@@ -13,14 +13,14 @@ echo "Running OpenSSL Speed with QAT"
 echo "---------------------------------------------"
 
 # Run the first openssl speed command
-result1=$(openssl speed -engine qatengine -seconds 5 -elapsed -async_jobs 72 rsa2048)
+result1=$(openssl speed -engine qatengine -seconds $1 -elapsed -async_jobs 72 rsa2048)
 
 echo -e "\n---------------------------------------------"
 echo "Running OpenSSL Speed without QAT"
 echo -e "---------------------------------------------"
 
 # Run the second openssl speed command
-result2=$(openssl speed -seconds 5 -elapsed -async_jobs 72 rsa2048)
+result2=$(openssl speed -seconds $1 -elapsed -async_jobs 72 rsa2048)
 
 echo -e "\n"
 
@@ -36,11 +36,11 @@ sign2=$(echo "$result2" | grep "rsa 2048" | awk '{print $6}')
 verify_percent_change=$(awk "BEGIN {print (($verify1 - $verify2) / $verify2) * 100}")
 sign_percent_change=$(awk "BEGIN {print (($sign1 - $sign2) / $sign2) * 100}")
 
-echo -e "\n$(hostnamectl | grep "Operating System")"
+echo -e "$(hostnamectl | grep "Operating System")"
 echo "$(hostnamectl | grep "Kernel" | tr -s ' ')"
 echo "OpenSSL Version: $(openssl version | awk '{print $1 " " $2}')"
 echo "Number of QAT Devices: $(lspci | grep Eth | wc -l)"
-echo "CPU: $(lscpu | grep "Model name" | cut -d ":" -f 2 | tr -s " " | head -n 1)"
+echo -e "CPU: $(lscpu | grep "Model name" | cut -d ":" -f 2 | tr -s " " | head -n 1)\n"
 
 # Calculate the width of the table
 table_width=53
