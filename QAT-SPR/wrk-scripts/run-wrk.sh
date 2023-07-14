@@ -75,7 +75,7 @@ case $size in
     ;;
 esac
 
-echo -e "Executing test for a $size workload with the following parameters:\n\n"
+echo -e "Executing test for a $size workload with the following parameters:\n"
 echo -e "Server URL: https://$server"
 echo -e "Size: $size"
 echo -e "Duration: ${duration}s"

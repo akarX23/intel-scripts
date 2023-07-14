@@ -2,7 +2,7 @@
 
 ulimit -n 655350
 
-echo "Flushing System cache"
+echo -e "Flushing System cache\n"
 sudo sh -c "sync;echo 3 > /proc/sys/vm/drop_caches"
 
 # Default values
@@ -98,7 +98,7 @@ run_workloads () {
 
 echo "+++++++++++++++++++++++++++++++++++++++++++++"
 echo "Running with QAT Enabled"
-echo "+++++++++++++++++++++++++++++++++++++++++++++"
+echo -e "+++++++++++++++++++++++++++++++++++++++++++++\n"
 
 eval $nginx_bin_path -s stop
 cp /home/akarx/QAT-installs/Engine/qat_hw_config/4xxx/multi_process/4xxx_dev0.conf /etc/4xxx_dev1.conf
@@ -111,19 +111,19 @@ eval $nginx_bin_path -c $nginx_qat_conf_path
 sar  -n DEV $(($(( $duration )) * 4)) 1 > logs/qat_sar.log &
 
 run_workloads --with-qat
-cat /sys/kernel/debug/qat_4xxx_0000:6b:00.0/fw_counters
+# cat /sys/kernel/debug/qat_4xxx_0000:6b:00.0/fw_counters
 
 wait
 
 echo "+++++++++++++++++++++++++++++++++++++++++++++"
 echo "Running without QAT Enabled"
-echo "+++++++++++++++++++++++++++++++++++++++++++++"
+echo -e "+++++++++++++++++++++++++++++++++++++++++++++\n"
 
 echo "Flushing System cache"
 sync; echo 3 > /proc/sys/vm/drop_caches
 sleep 5
 
-eval $nginx_bin_path -s stop
+eval $nginx_bin_path -s stop 2> /dev/null
 sleep 5
 eval $nginx_bin_path -c $nginx_wqat_cong_path
 
@@ -133,15 +133,14 @@ run_workloads
 
 wait
 
-echo "============================================="
-echo "---------------------------------------------"
+echo "+++++++++++++++++++++++++++++++++++++++++++++"
 echo "Summarizing results"
-echo "---------------------------------------------"
+echo -e "+++++++++++++++++++++++++++++++++++++++++++++\n"
 
 echo -e "$(hostnamectl | grep "Operating System")"
 echo "Kernel Version: $(hostnamectl | grep "Kernel" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')"
 echo "NGINX Version: $($nginx_bin_path -v 2>&1 | grep -oP 'nginx/\K[\d.]+')"
 echo "Number of QAT Devices: $(lspci | grep Eth | wc -l)"
-echo -e "CPU:$(lscpu | grep "Model name" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')\n"
+echo -e "CPU: $(lscpu | grep "Model name" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')\n"
 
 ./summarise.sh

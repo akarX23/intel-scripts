@@ -40,7 +40,7 @@ echo -e "$(hostnamectl | grep "Operating System")"
 echo "Kernel Version: $(hostnamectl | grep "Kernel" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')"
 echo "OpenSSL Version: $(openssl version | awk '{print $1 " " $2}')"
 echo "Number of QAT Devices: $(lspci | grep Eth | wc -l)"
-echo -e "CPU:$(lscpu | grep "Model name" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')\n"
+echo -e "CPU: $(lscpu | grep "Model name" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')\n"
 
 # Calculate the width of the table
 table_width=53
