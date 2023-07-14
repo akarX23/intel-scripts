@@ -91,20 +91,26 @@ run_workloads () {
   echo "---------------------------------------------"
   numactl -C 16-55 ./run-wrk.sh --server $server --size 1MB --duration $duration --threads 24 --connections $connections $1
   echo
+}
 
+flush_cache() {
+  echo "Flushing System cache"
+  sync; echo 3 > /proc/sys/vm/drop_caches
+  sleep 5
 }
 
 # cat /sys/kernel/debug/qat_4xxx_0000:6b:00.0/fw_counters
 
-echo "+++++++++++++++++++++++++++++++++++++++++++++"
-echo "Running with QAT Enabled"
-echo -e "+++++++++++++++++++++++++++++++++++++++++++++\n"
-
-eval $nginx_bin_path -s stop
+echo "Enabling QAT..."
+eval $nginx_bin_path -s stop 2> /dev/null
 cp /home/akarx/QAT-installs/Engine/qat_hw_config/4xxx/multi_process/4xxx_dev0.conf /etc/4xxx_dev1.conf
 cp /home/akarx/QAT-installs/Engine/qat_hw_config/4xxx/multi_process/4xxx_dev0.conf /etc/4xxx_dev0.conf
 sleep 5
 service qat_service restart
+
+echo "+++++++++++++++++++++++++++++++++++++++++++++"
+echo "Running with QAT Enabled"
+echo -e "+++++++++++++++++++++++++++++++++++++++++++++\n"
 
 eval $nginx_bin_path -c $nginx_qat_conf_path
 
@@ -115,16 +121,15 @@ run_workloads --with-qat
 
 wait
 
+echo "Disabling QAT..."
+eval $nginx_bin_path -s stop 2> /dev/null
+sleep 5
+
 echo "+++++++++++++++++++++++++++++++++++++++++++++"
 echo "Running without QAT Enabled"
 echo -e "+++++++++++++++++++++++++++++++++++++++++++++\n"
 
-echo "Flushing System cache"
-sync; echo 3 > /proc/sys/vm/drop_caches
-sleep 5
-
-eval $nginx_bin_path -s stop 2> /dev/null
-sleep 5
+flush_cache
 eval $nginx_bin_path -c $nginx_wqat_cong_path
 
 sar  -n DEV $(($(( $duration )) * 4)) 1 > logs/sar.log &
