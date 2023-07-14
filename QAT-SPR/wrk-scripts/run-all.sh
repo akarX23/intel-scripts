@@ -138,10 +138,10 @@ echo "---------------------------------------------"
 echo "Summarizing results"
 echo "---------------------------------------------"
 
-echo -e "\n$(hostnamectl | grep "Operating System")"
-echo "$(hostnamectl | grep "Kernel" | tr -s ' ')"
+echo -e "$(hostnamectl | grep "Operating System")"
+echo "Kernel Version: $(hostnamectl | grep "Kernel" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')"
 echo "NGINX Version: $($nginx_bin_path -v 2>&1 | grep -oP 'nginx/\K[\d.]+')"
 echo "Number of QAT Devices: $(lspci | grep Eth | wc -l)"
-echo "CPU: $(lscpu | grep "Model name" | cut -d ":" -f 2 | tr -s " " | head -n 1)"
+echo -e "CPU:$(lscpu | grep "Model name" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')\n"
 
 ./summarise.sh

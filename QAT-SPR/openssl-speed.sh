@@ -37,10 +37,10 @@ verify_percent_change=$(awk "BEGIN {print (($verify1 - $verify2) / $verify2) * 1
 sign_percent_change=$(awk "BEGIN {print (($sign1 - $sign2) / $sign2) * 100}")
 
 echo -e "$(hostnamectl | grep "Operating System")"
-echo "$(hostnamectl | grep "Kernel" | tr -s ' ')"
+echo "Kernel Version: $(hostnamectl | grep "Kernel" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')"
 echo "OpenSSL Version: $(openssl version | awk '{print $1 " " $2}')"
 echo "Number of QAT Devices: $(lspci | grep Eth | wc -l)"
-echo -e "CPU: $(lscpu | grep "Model name" | cut -d ":" -f 2 | tr -s " " | head -n 1)\n"
+echo -e "CPU:$(lscpu | grep "Model name" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')\n"
 
 # Calculate the width of the table
 table_width=53
