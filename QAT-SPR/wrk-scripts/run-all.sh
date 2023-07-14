@@ -134,4 +134,9 @@ echo "============================================="
 echo "---------------------------------------------"
 echo "Summarizing results"
 echo "---------------------------------------------"
+
+echo -e "\n$(hostnamectl | grep "Operating System")"
+echo "$(hostnamectl | grep "Kernel" | tr -s ' ')"
+echo "CPU: $(lscpu | grep "Model name" | cut -d ":" -f 2 | tr -s " " | head -n 1)"
+
 ./summarise.sh
