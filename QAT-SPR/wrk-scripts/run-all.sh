@@ -8,7 +8,7 @@ sudo sh -c "sync;echo 3 > /proc/sys/vm/drop_caches"
 # Default values
 server="localhost:443"
 duration=10
-nginx_bin_path="/home/akarx/QAT-Installs/NGINX/install/sbin/nginx"
+nginx_bin_path="/home/akarx/QAT-installs/NGINX/install/sbin/nginx"
 nginx_qat_conf_path="/home/akarx/QAT-installs/NGINX/install/conf/nginx.conf.qat"
 nginx_wqat_cong_path="/home/akarx/QAT-installs/NGINX/install/conf/nginx.conf.bak"
 threads=28
