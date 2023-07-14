@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# Shutting down any nginx processes
+ps aux | grep nginx | awk '{print $2}' | xargs kill
+
+# Replacing QAT config and restart QAT
+cp /home/akarx/QAT-installs/Engine/qat_hw_config/4xxx/multi_process/4xxx_dev0.conf /etc/4xxx_dev1.conf
+cp /home/akarx/QAT-installs/Engine/qat_hw_config/4xxx/multi_process/4xxx_dev0.conf /etc/4xxx_dev0.conf
+service qat_service restart
+
 echo "---------------------------------------------"
 echo "Running OpenSSL Speed with QAT"
 echo "---------------------------------------------"
@@ -27,6 +35,12 @@ sign2=$(echo "$result2" | grep "rsa 2048" | awk '{print $6}')
 # Calculate the percent change in verify/s and sign/s
 verify_percent_change=$(awk "BEGIN {print (($verify1 - $verify2) / $verify2) * 100}")
 sign_percent_change=$(awk "BEGIN {print (($sign1 - $sign2) / $sign2) * 100}")
+
+echo -e "\n$(hostnamectl | grep "Operating System")"
+echo "$(hostnamectl | grep "Kernel" | tr -s ' ')"
+echo "OpenSSL Version: $(openssl version | awk '{print $1 " " $2}')"
+echo "Number of QAT Devices: $(lspci | grep Eth | wc -l)"
+echo "CPU: $(lscpu | grep "Model name" | cut -d ":" -f 2 | tr -s " " | head -n 1)"
 
 # Calculate the width of the table
 table_width=53

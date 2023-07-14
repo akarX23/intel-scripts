@@ -7,10 +7,10 @@ sudo sh -c "sync;echo 3 > /proc/sys/vm/drop_caches"
 
 # Default values
 server="localhost:443"
-duration=120
-nginx_bin_path="/usr/local/nginx"
-nginx_qat_conf_path="/etc/nginx/qat"
-nginx_wqat_cong_path="/etc/nginx/nginx.conf"
+duration=10
+nginx_bin_path="/home/akarx/QAT-Installs/NGINX/install/sbin/nginx"
+nginx_qat_conf_path="/home/akarx/QAT-installs/NGINX/install/conf/nginx.conf.qat"
+nginx_wqat_cong_path="/home/akarx/QAT-installs/NGINX/install/conf/nginx.conf.bak"
 threads=28
 connections=2000
 
@@ -55,6 +55,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     *) # unknown option
       shift # past argument
+      exit
       ;;
   esac
 done
@@ -93,13 +94,15 @@ run_workloads () {
 
 }
 
-cat /sys/kernel/debug/qat_4xxx_0000:6b:00.0/fw_counters
+# cat /sys/kernel/debug/qat_4xxx_0000:6b:00.0/fw_counters
 
 echo "+++++++++++++++++++++++++++++++++++++++++++++"
 echo "Running with QAT Enabled"
 echo "+++++++++++++++++++++++++++++++++++++++++++++"
 
 eval $nginx_bin_path -s stop
+cp /home/akarx/QAT-installs/Engine/qat_hw_config/4xxx/multi_process/4xxx_dev0.conf /etc/4xxx_dev1.conf
+cp /home/akarx/QAT-installs/Engine/qat_hw_config/4xxx/multi_process/4xxx_dev0.conf /etc/4xxx_dev0.conf
 sleep 5
 service qat_service restart
 
@@ -134,4 +137,11 @@ echo "============================================="
 echo "---------------------------------------------"
 echo "Summarizing results"
 echo "---------------------------------------------"
+
+echo -e "\n$(hostnamectl | grep "Operating System")"
+echo "$(hostnamectl | grep "Kernel" | tr -s ' ')"
+echo "NGINX Version: $($nginx_bin_path -v 2>&1 | grep -oP 'nginx/\K[\d.]+')"
+echo "Number of QAT Devices: $(lspci | grep Eth | wc -l)"
+echo "CPU: $(lscpu | grep "Model name" | cut -d ":" -f 2 | tr -s " " | head -n 1)"
+
 ./summarise.sh
