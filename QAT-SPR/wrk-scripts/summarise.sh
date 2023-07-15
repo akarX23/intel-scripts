@@ -17,6 +17,21 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+# Convert sizes to bytes
+convert_size_to_bytes() {
+  local size=$1
+  local unit=${size: -2}  # Extract the last two characters (unit)
+  local value=${size%${unit}}  # Extract the value (all characters except the unit)
+
+  case "$unit" in
+    "KB") echo $(bc <<< "$value * 1024") ;;
+    "MB") echo $(bc <<< "$value * 1024 * 1024") ;;
+    "GB") echo $(bc <<< "$value * 1024 * 1024 * 1024") ;;
+    "TB") echo $(bc <<< "$value * 1024 * 1024 * 1024 * 1024") ;;
+    *) echo "Invalid size unit. Please provide a valid size (e.g., 1KB, 2MB, 700.68GB)." ;;
+  esac
+}
+
 # Function to get content type based on log file name
 get_content_type() {
   filename=$(basename "$1")
@@ -82,9 +97,12 @@ summarize_log_file() {
 
     if [[ -e "$log_file_without_qat" ]]; then
       # Get the total data transfer without QAT
-      total_data_without_qat=$(cat "$log_file_without_qat" | awk '/ requests in / {print $5}' | grep -oE '[0-9.]+')
+        total_data_without_qat=$(cat "$log_file_without_qat" | awk '/ requests in / {print $5}')
 
-      percent_change=$(echo "scale=2; (($(echo "$total_data" | grep -oE '[0-9.]+') - $total_data_without_qat) / $total_data_without_qat) * 100" | bc)
+        total_data_bytes=$(convert_size_to_bytes $total_data)
+        total_data_wqat_bytes=$(convert_size_to_bytes $total_data_without_qat)
+
+        percent_change=$(echo "scale=2; (($total_data_bytes - $total_data_wqat_bytes) / $total_data_wqat_bytes) * 100" | bc)
 
       if (( $(echo "$percent_change >= 0" | bc -l) )); then
         percent_change="+$percent_change"
@@ -95,7 +113,7 @@ summarize_log_file() {
   else
     percent_change="-"
   fi
-  printf "| %8s | %25s | %10s | %13s | %10s | %20s | %10s | %20s | %10s | %13s | %10s | %20s |\n" $file_size "$content_type" $threads   $connections   $duration  $total_requests   $requests_sec  $total_data  $data_sec  $ninety_ninth_p  $max_requests  $percent_change
+  printf "| %8s | %25s | %10s | %13s | %10s | %20s | %10s | %20s | %10s | %13s | %10s | %25s |\n" $file_size "$content_type" $threads   $connections   $duration  $total_requests   $requests_sec  $total_data  $data_sec  $ninety_ninth_p  $max_requests  $percent_change
 }
 
 append_files() {
@@ -124,11 +142,11 @@ if [ -z "$log_files" ]; then
 fi
 
 # Calculate the width of the table
-table_width=204
+table_width=209
 
 # Print table header
 echo "+$(printf "%0.s-" $(seq 1 $table_width))+"
-printf "| %8s | %25s | %10s | %13s | %10s | %20s | %10s | %20s | %10s | %13s | %10s | %15s |\n" "Workload" "Type" "Threads" "Connections" "Duration" "Total Requests" "Requests/s" "Total Data Transfer" "Transfer/s" "99% Latency" "Max Req/s" "% Change in Transfer"
+printf "| %8s | %25s | %10s | %13s | %10s | %20s | %10s | %20s | %10s | %13s | %10s | %25s |\n" "Workload" "Type" "Threads" "Connections" "Duration" "Total Requests" "Requests/s" "Total Data Transfer" "Transfer/s" "99% Latency" "Max Req/s" "% Change in Throughput"
 echo "+$(printf "%0.s-" $(seq 1 $table_width))+"
 
 # Process each log file
