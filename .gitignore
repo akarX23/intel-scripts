@@ -4,6 +4,7 @@ QAT-SPR/QAT_Engine
 QAT-SPR/QATzip
 QAT-SPR/asynch_mode_nginx
 QAT-SPR/wrk-scripts/logs/
+QAT-SPR/zip-logs/
 QAT-SPR/wrk-scripts/1
 QAT-SPR/wrk-scripts/prod-logs
 QAT-SPR/wrk-scripts/*.txt
