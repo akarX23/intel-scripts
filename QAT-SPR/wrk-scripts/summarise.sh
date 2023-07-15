@@ -82,9 +82,9 @@ summarize_log_file() {
 
     if [[ -e "$log_file_without_qat" ]]; then
       # Get the total data transfer without QAT
-      total_requests_without_qat=$(cat "$log_file_without_qat" | awk '/ requests in / {print $1}')
+      total_data_without_qat=$(cat "$log_file_without_qat" | awk '/ requests in / {print $5}' | grep -oE '[0-9.]+')
 
-      percent_change=$(echo "scale=2; (($total_requests - $total_requests_without_qat) / $total_requests_without_qat) * 100" | bc)
+      percent_change=$(echo "scale=2; (($(echo "$total_data" | grep -oE '[0-9.]+') - $total_data_without_qat) / $total_data_without_qat) * 100" | bc)
 
       if (( $(echo "$percent_change >= 0" | bc -l) )); then
         percent_change="+$percent_change"

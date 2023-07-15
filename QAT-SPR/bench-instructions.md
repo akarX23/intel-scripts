@@ -5,7 +5,7 @@
 - Login to the JumpServer
 - Login to spr197 machine
 - switch to _root_ user with `sudo su`
-- change to the scripts directory: `cd /home/akarx/intel-scripts/QAT-SPR`
+- change to the scripts directory: `cd /home/benchmark/QAT-SPR`
 
 ## OpenSSL Benchmarking
 
@@ -25,23 +25,29 @@ Running OpenSSL Speed with QAT
 ---------------------------------------------
 Engine "qatengine" set.
 You have chosen to measure elapsed time instead of user CPU time.
-Doing 2048 bits private rsa's for 10s: 195601 2048 bits private RSA's in 10.00s
-Doing 2048 bits public rsa's for 10s: 2707334 2048 bits public RSA's in 10.00s
+Doing 2048 bits private rsa's for 3s: 58180 2048 bits private RSA's in 3.00s
+Doing 2048 bits public rsa's for 3s: 779954 2048 bits public RSA's in 3.00s
 
 ---------------------------------------------
 Running OpenSSL Speed without QAT
 ---------------------------------------------
 You have chosen to measure elapsed time instead of user CPU time.
-Doing 2048 bits private rsa's for 10s: 25839 2048 bits private RSA's in 10.00s
-Doing 2048 bits public rsa's for 10s: ^[[D528851 2048 bits public RSA's in 10.00s
+Doing 2048 bits private rsa's for 3s: 7766 2048 bits private RSA's in 3.00s
+Doing 2048 bits public rsa's for 3s: 158630 2048 bits public RSA's in 3.00s
 
+
+Operating System: Ubuntu 22.04.2 LTS
+Kernel Version: Linux 5.15.0-72-generic
+OpenSSL Version: OpenSSL 3.0.9-dev
+Number of QAT Devices: 2
+CPU: Intel(R) Xeon(R) Platinum 8480+
 
 +-----------------------------------------------------+
 |            Test |        Verify/s |          Sign/s |
 +-----------------------------------------------------+
-|        With QAT |        270733.4 |         19560.1 |
-|          No QAT |         52885.1 |          2583.9 |
-|  Percent Change |       +411.928% |       +656.999% |
+|        With QAT |        259984.7 |         19393.3 |
+|          No QAT |         52876.7 |          2588.7 |
+|  Percent Change |       +391.681% |       +649.152% |
 +-----------------------------------------------------+
 ```
 
@@ -59,14 +65,20 @@ Perform the initial steps above and perform these steps:
 
 ```
 # Change to script directory
-cd /home/akarx/intel-scripts/QAT-SPR/wrk-scripts
+cd /home/benchmark/QAT-SPR/wrk-scripts
 
 # Run the script
-./run-all.sh --server localhost:443 --duration 10 --nginx-bin-path /home/akarx/QAT-installs/NGINX/install/sbin/nginx --nginx-wqat-conf-path /home/akarx/QAT-installs/NGINX/install/conf/nginx.conf.bak --nginx-qat-conf-path /home/akarx/QAT-installs/NGINX/install/conf/nginx.conf.qat
+./run-all.sh --duration 5
 ```
 
 You can change the `--duration` parameter according to requirement, the rest should be kept same.
 
 This script will generate logs in the `logs` directory. To see the summarised table again for the previously generated logs execute `./summarise.sh`.
 
-These benchmarks should normally be run for a longer time to get a better understanding of the metrics. You can see the logs for a long benchmark in `/home/akarx/intel-scripts/QAT-SPR/wrk-scripts/prod-logs`. To put these logs in tabular format, you can use `./summarise.sh --log-dir prod-logs`
+These benchmarks should normally be run for a longer time to get a better understanding of the metrics. You can see the logs for a long benchmark in `/home/akarx/intel-scripts/QAT-SPR/wrk-scripts/prod-logs`. To put these logs in tabular format, you can use `./summarise.sh --log-dir prod-logs`.
+
+Sample run:
+
+```
+
+```
