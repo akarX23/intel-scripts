@@ -225,7 +225,7 @@ for task in "${task_list[@]}"; do
         "bench")
             echo "Performing 'bench' task..."
             create_benchmark_file "$SCRIPTS_DIR/${DATABASE}_bench.tcl" "bench"
-            numactl $NUMA_ARGS ./hammerdbcli auto $SCRIPTS_DIR/${DATABASE}_bench.tcl
+            numactl $NUMA_ARGS ./hammerdbcli auto $SCRIPTS_DIR/${DATABASE}_bench.tcl > $SCRIPTS_DIR/${DATABASE}_bench.log
             ;;
         *)
             # This should never happen due to the task validation earlier.
@@ -235,3 +235,18 @@ for task in "${task_list[@]}"; do
     esac
 done
 
+NOPM=$(cat $SCRIPTS_DIR/${DATABASE}_bench.log | grep "TEST RESULT" | awk '{print $7}')
+TPM=$(cat $SCRIPTS_DIR/${DATABASE}_bench.log | grep "TEST RESULT" | awk '{print $10}')
+
+echo "+++++++++++++++++++++++++++++++++++++++++++++"
+echo "Summarizing results"
+echo -e "+++++++++++++++++++++++++++++++++++++++++++++\n"
+
+echo -e "$(hostnamectl | grep "Operating System")"
+echo "Kernel Version: $(hostnamectl | grep "Kernel" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')"
+echo -e "CPU: $(lscpu | grep "Model name" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')\n"
+
+echo "TEST RESULT:"
+echo "Database: $DATABASE"
+echo "NOPM: $NOPM"
+echo "TPM: $TPM"
