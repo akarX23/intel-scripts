@@ -225,11 +225,11 @@ for task in "${task_list[@]}"; do
             numactl $NUMA_ARGS ./hammerdbcli auto $SCRIPTS_DIR/${DATABASE}_fill.tcl
             ;;
         "bench")
-            echo "+++++++++++++++++++++++++++++++++++++++++++++"
+            echo -e "\n+++++++++++++++++++++++++++++++++++++++++++++"
             echo "Running Benchmark with $VIRTUAL_USERS virtual users"
             echo -e "+++++++++++++++++++++++++++++++++++++++++++++\n"
             create_benchmark_file "$SCRIPTS_DIR/${DATABASE}_bench.tcl" "bench"
-            numactl $NUMA_ARGS ./hammerdbcli auto $SCRIPTS_DIR/${DATABASE}_bench.tcl > $SCRIPTS_DIR/${DATABASE}_bench.log
+            numactl $NUMA_ARGS ./hammerdbcli auto $SCRIPTS_DIR/${DATABASE}_bench.tcl 2> $SCRIPTS_DIR/${DATABASE}_bench.log
             ;;
         *)
             # This should never happen due to the task validation earlier.
