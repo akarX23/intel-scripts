@@ -218,12 +218,16 @@ IFS=',' read -ra task_list <<< "$TASKS"
 for task in "${task_list[@]}"; do
     case "$task" in
         "fill")
-            echo "Performing 'fill' task..."
+            echo "+++++++++++++++++++++++++++++++++++++++++++++"
+            echo "Filling Database with $DATA_WAREHOUSES warehouses"
+            echo -e "+++++++++++++++++++++++++++++++++++++++++++++\n"
             create_benchmark_file "$SCRIPTS_DIR/${DATABASE}_fill.tcl" "fill"
             numactl $NUMA_ARGS ./hammerdbcli auto $SCRIPTS_DIR/${DATABASE}_fill.tcl
             ;;
         "bench")
-            echo "Performing 'bench' task..."
+            echo "+++++++++++++++++++++++++++++++++++++++++++++"
+            echo "Running Benchmark with $VIRTUAL_USERS virtual users"
+            echo -e "+++++++++++++++++++++++++++++++++++++++++++++\n"
             create_benchmark_file "$SCRIPTS_DIR/${DATABASE}_bench.tcl" "bench"
             numactl $NUMA_ARGS ./hammerdbcli auto $SCRIPTS_DIR/${DATABASE}_bench.tcl > $SCRIPTS_DIR/${DATABASE}_bench.log
             ;;
