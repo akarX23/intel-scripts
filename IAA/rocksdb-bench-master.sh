@@ -142,7 +142,7 @@ echo "Summarizing Results"
 echo "---------------------------------------------"
 
 echo -e "\n$(hostnamectl | grep "Operating System")"
-echo "$(hostnamectl | grep "Kernel" | tr -s ' ')"
+echo "Kernel Version: $(hostnamectl | grep "Kernel" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')"
 echo "RocksDB Version: $($ROCKSDB_DIR/db_bench --version | cut -d " " -f 3)"
 echo "ZSTD Version: $(zstd --version | grep -oP 'v\d+\.\d+\.\d+')"
 echo "CPU: $(lscpu | grep "Model name" | cut -d ":" -f 2 | tr -s " " | head -n 1)"
