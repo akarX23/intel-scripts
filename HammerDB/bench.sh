@@ -2,31 +2,39 @@
 
 # Default values for variables
 HDB_DIR="/home/ubuntu/HammerDB-4.8"
-MYSQL_USER="root"
-MYSQL_PASSWORD="root"
+DB_USER="root"
+DB_PASSWORD="root"
 DATA_WAREHOUSES=2
 TASKS="fill,bench"
 VIRTUAL_USERS=2
 DATABASE="mysql"
 SCRIPTS_DIR="$(pwd)/scripts"
 RAMPUP_DUR="1"
-RUN_TIMER="100"
+PG_SUPERUSER_PASSWORD=postgres
+PG_SUPERUSER=postgres
+ITERATIONS=10000000
+DB_HOST=localhost
+DB_PORT=3306
 
 # Help function to display script usage
 print_help() {
     echo "Usage: $0 [OPTIONS]"
     echo "Options:"
-    echo "  -h, --help                 Display this help message"
     echo "  -d, --hdb-dir DIR         Set the HammerDB directory (default: $HDB_DIR)"
-    echo "  -u, --db-user USER     Set the DB username (default: $MYSQL_USER)"
-    echo "  -p, --db-password PASS Set the DB password (default: $MYSQL_PASSWORD)"
+    echo "  -u, --db-user USER     Set the DB username (default: $DB_USER)"
+    echo "  -p, --db-password PASS Set the DB password (default: $DB_PASSWORD)"
+    echo "  -host, --db-host HOST        Set the database host (default: $DB_HOST)"
+    echo "  -port, --db-port PORT        Set the database port (default: $DB_PORT)"
     echo "  -w, --data-warehouses NUM Set the number of data warehouses (default: $DATA_WAREHOUSES)"
     echo "  -t, --tasks TASKS         Set the tasks to perform (default: $TASKS)"
     echo "  -v, --virtual-users NUM   Set the number of virtual users (default: $VIRTUAL_USERS)"
     echo "  -db, --database DB        Set the database type (default: $DATABASE)"
     echo "  -s, --scripts-dir DIR     Set the scripts directory (default: $SCRIPTS_DIR)"
     echo "  -r, --rampup-dur NUM      Set the rampup duration in minutes (default: $RAMPUP_DUR)"
-    echo "  -rt, --run-timer NUM      Set the run timer in seconds (default: $RUN_TIMER)"
+    echo "  -pgsp, --pg-superuser-password PASS Set the PostgreSQL superuser password (default: $PG_SUPERUSER_PASSWORD)"
+    echo "  -pgsu, --pg-superuser USER Set the PostgreSQL superuser (default: $PG_SUPERUSER)"
+    echo "  -i, --iterations NUM      Set the number of iterations (default: $ITERATIONS)"
+    echo "  -h, --help                 Display this help message"
     echo "Note: If an option is not provided, the default value will be used."
 }
 
@@ -37,7 +45,7 @@ is_valid_database() {
 
     # List of valid databases (MySQL and PostgreSQL)
     case "$db_lowercase" in
-        "mysql"|"postgres")
+        "mysql"|"pg")
             return 0  # Valid database
             ;;
         *)
@@ -68,31 +76,40 @@ create_benchmark_file() {
     cat <<EOF > "$benchmark_file"
 dbset db ${DATABASE}
 dbset bm tpc-c
-diset tpcc mysql_pass ${MYSQL_PASSWORD}   
-diset tpcc mysql_user ${MYSQL_USER}
+diset tpcc ${DATABASE}_pass ${DB_PASSWORD}   
+diset tpcc ${DATABASE}_user ${DB_USER}
+diset connection ${DATABASE}_host ${DB_HOST}
+diset connection ${DATABASE}_port ${DB_PORT}
 EOF
-    
+   
+    if [[ "$DATABASE" == "pg" ]]; then
+        cat <<EOF >> "$benchmark_file"
+diset tpcc pg_superuserpass ${PG_SUPERUSER_PASSWORD}
+diset tpcc pg_superuserpass ${PG_SUPERUSER}
+EOF
+    fi 
         # Add the task-specific content
         case "$task" in
             "fill")
                 cat <<EOF >> "$benchmark_file"
-diset tpcc mysql_count_ware ${DATA_WAREHOUSES}
-diset tpcc mysql_num_vu ${VIRTUAL_USERS}
+diset tpcc ${DATABASE}_count_ware ${DATA_WAREHOUSES}
+diset tpcc ${DATABASE}_num_vu ${VIRTUAL_USERS}
+diset tpcc ${DATABASE}_total_iterations ${ITERATIONS}
 buildschema
 EOF
                 ;;
             "bench")
                 cat <<EOF >> "$benchmark_file"
 vudestroy
-diset tpcc mysql_driver timed
-diset tpcc mysql_timeprofile true
-diset tpcc mysql_rampup ${RAMPUP_DUR}
-diset tpcc mysql_duration 5
+diset tpcc ${DATABASE}_driver timed
+diset tpcc ${DATABASE}_timeprofile true
+diset tpcc ${DATABASE}_rampup ${RAMPUP_DUR}
+diset tpcc ${DATABASE}_duration 5
 loadscript
 vuset vu ${VIRTUAL_USERS}
+vuset logtotemp 1
 vucreate
 vurun
-runtimer ${RUN_TIMER}
 vudestroy
 EOF
                 ;;
@@ -112,11 +129,11 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         -u|--db-user)
-            MYSQL_USER="$2"
+            DB_USER="$2"
             shift 2
             ;;
         -p|--db-password)
-            MYSQL_PASSWORD="$2"
+            DB_PASSWORD="$2"
             shift 2
             ;;
         -w|--data-warehouses)
@@ -143,10 +160,26 @@ while [[ $# -gt 0 ]]; do
             RAMPUP_DUR="$2"
             shift 2
             ;;
-        -rt | --run-timer)
-            RUN_TIMER="$2"
+        -pgsp | --pg-superuser-password)
+            PG_SUPERUSER_PASSWORD="$2"
             shift 2
-            ;;    
+            ;;
+        -pgsu | --pg-superuser)
+            PG_SUPERUSER="$2"
+            shift 2
+            ;;
+        -i | --iterations)
+            ITERATIONS="$2"
+            shift 2
+            ;;
+        -host | --db-host)
+            DB_HOST="$2"
+            shift 2
+            ;;
+        -port | --db-port)
+            DB_PORT="$2"
+            shift 2
+            ;;
         *)
             echo "Invalid option: $1"
             print_help
@@ -158,7 +191,7 @@ done
 # Check if the provided database is valid before proceeding
 if ! is_valid_database "$DATABASE"; then
     echo "Invalid database: $DATABASE"
-    echo "Supported databases are: mysql, postgres"
+    echo "Supported databases are: mysql, pg"
     exit 1
 fi
 
@@ -175,12 +208,12 @@ for task in "${task_list[@]}"; do
         "fill")
             echo "Performing 'fill' task..."
             create_benchmark_file "$SCRIPTS_DIR/${DATABASE}_fill.tcl" "fill"
-            eval ./hammerdbcli auto $SCRIPTS_DIR/${DATABASE}_fill.tcl
+            #eval ./hammerdbcli auto $SCRIPTS_DIR/${DATABASE}_fill.tcl
             ;;
         "bench")
             echo "Performing 'bench' task..."
             create_benchmark_file "$SCRIPTS_DIR/${DATABASE}_bench.tcl" "bench"
-            eval ./hammerdbcli auto $SCRIPTS_DIR/${DATABASE}_bench.tcl
+            #eval ./hammerdbcli auto $SCRIPTS_DIR/${DATABASE}_bench.tcl
             ;;
         *)
             # This should never happen due to the task validation earlier.
