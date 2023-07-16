@@ -208,12 +208,12 @@ for task in "${task_list[@]}"; do
         "fill")
             echo "Performing 'fill' task..."
             create_benchmark_file "$SCRIPTS_DIR/${DATABASE}_fill.tcl" "fill"
-            #eval ./hammerdbcli auto $SCRIPTS_DIR/${DATABASE}_fill.tcl
+            eval ./hammerdbcli auto $SCRIPTS_DIR/${DATABASE}_fill.tcl
             ;;
         "bench")
             echo "Performing 'bench' task..."
             create_benchmark_file "$SCRIPTS_DIR/${DATABASE}_bench.tcl" "bench"
-            #eval ./hammerdbcli auto $SCRIPTS_DIR/${DATABASE}_bench.tcl
+            eval ./hammerdbcli auto $SCRIPTS_DIR/${DATABASE}_bench.tcl
             ;;
         *)
             # This should never happen due to the task validation earlier.
