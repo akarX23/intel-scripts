@@ -58,7 +58,7 @@ echo "compthroughput=$compthroughput Gbps"
 echo "---------------------------------------------"
 echo "Decompression test on 1GB file"
 echo "---------------------------------------------"
-numactl -C 56-111 $QZ_ROOT/test/test -m 4 -i /home/benchmark/1GB.bin -t $THREADS -D comp -l 10 > zip-logs/1GB_decomp.log 2>&1
+numactl -C 56-111 $QZ_ROOT/test/test -m 4 -i /home/benchmark/1GB.bin -t $THREADS -D decomp -l 10 > zip-logs/1GB_decomp.log 2>&1
 
 compthroughput=`awk '{sum+=$8} END{print sum}' zip-logs/1GB_decomp.log`
 echo "compthroughput=$compthroughput Gbps"
