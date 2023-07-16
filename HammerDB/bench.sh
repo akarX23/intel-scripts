@@ -229,7 +229,7 @@ for task in "${task_list[@]}"; do
             echo "Running Benchmark with $VIRTUAL_USERS virtual users"
             echo -e "+++++++++++++++++++++++++++++++++++++++++++++\n"
             create_benchmark_file "$SCRIPTS_DIR/${DATABASE}_bench.tcl" "bench"
-            numactl $NUMA_ARGS ./hammerdbcli auto $SCRIPTS_DIR/${DATABASE}_bench.tcl 2> $SCRIPTS_DIR/${DATABASE}_bench.log
+            numactl $NUMA_ARGS ./hammerdbcli auto $SCRIPTS_DIR/${DATABASE}_bench.tcl > $SCRIPTS_DIR/${DATABASE}_bench.log | tee "$SCRIPTS_DIR/${DATABASE}_bench.log"
             ;;
         *)
             # This should never happen due to the task validation earlier.
