@@ -9,6 +9,8 @@ TASKS="fill,bench"
 VIRTUAL_USERS=2
 DATABASE="mysql"
 SCRIPTS_DIR="scripts"
+RAMPUP_DUR="1"
+RUN_TIMER="100"
 
 # Help function to display script usage
 print_help() {
@@ -16,13 +18,15 @@ print_help() {
     echo "Options:"
     echo "  -h, --help                 Display this help message"
     echo "  -d, --hdb-dir DIR         Set the HammerDB directory (default: /home/ubuntu/HammerDB-4.8)"
-    echo "  -u, --mysql-user USER     Set the MySQL username (default: root)"
-    echo "  -p, --mysql-password PASS Set the MySQL password (default: root)"
+    echo "  -u, --db-user USER     Set the DB username (default: root)"
+    echo "  -p, --db-password PASS Set the DB password (default: root)"
     echo "  -w, --data-warehouses NUM Set the number of data warehouses (default: 2)"
     echo "  -t, --tasks TASKS         Set the tasks to perform (default: fill,bench)"
     echo "  -v, --virtual-users NUM   Set the number of virtual users (default: 2)"
     echo "  -db, --database DB        Set the database type (default: mysql)"
     echo "  -s, --scripts-dir DIR     Set the scripts directory (default: scripts)"
+    echo "  -r, --rampup-dur NUM      Set the rampup duration in minutes (default: 1)"
+    echo "  -rt, --run-timer NUM      Set the run timer in seconds (default: 100)"
     echo "Note: If an option is not provided, the default value will be used."
 }
 
@@ -66,7 +70,6 @@ dbset db $DATABASE
 dbset bm tpc-c
 diset tpcc mysql_pass $MYSQL_PASSWORD   
 diset tpcc mysql_user $MYSQL_USER
-diset tpcc mysql_driver timed
 EOF
     
         # Add the task-specific content
@@ -80,14 +83,15 @@ EOF
                 ;;
             "bench")
                 cat <<EOF >> "$benchmark_file"
+diset tpcc mysql_driver timed
 diset tpcc mysql_timeprofile true
-diset tpcc mysql_rampup 2
+diset tpcc mysql_rampup $RAMPUP_DUR
 diset tpcc mysql_duration 5
 loadscript
 vuset vu $VIRTUAL_USERS
 vucreate
 vurun
-runtimer 600
+runtimer $RUN_TIMER
 vudestroy
 EOF
                 ;;
@@ -106,11 +110,11 @@ while [[ $# -gt 0 ]]; do
             HDB_DIR="$2"
             shift 2
             ;;
-        -u|--mysql-user)
+        -u|--db-user)
             MYSQL_USER="$2"
             shift 2
             ;;
-        -p|--mysql-password)
+        -p|--db-password)
             MYSQL_PASSWORD="$2"
             shift 2
             ;;
@@ -134,6 +138,14 @@ while [[ $# -gt 0 ]]; do
             SCRIPTS_DIR="$2"
             shift 2
             ;;
+        -r | --rampup-dur)
+            RAMPUP_DUR="$2"
+            shift 2
+            ;;
+        -rt | --run-timer)
+            RUN_TIMER="$2"
+            shift 2
+            ;;    
         *)
             echo "Invalid option: $1"
             print_help
@@ -151,19 +163,23 @@ fi
 
 validate_tasks "$TASKS"
 
+cd $HDB_DIR
+mkdir -p $SCRIPTS_DIR
+sudo ln -s /run/mysqld/mysqld.sock /tmp/mysql.sock 2> /dev/null
+
 # Loop over the tasks
 IFS=',' read -ra task_list <<< "$TASKS"
 for task in "${task_list[@]}"; do
     case "$task" in
         "fill")
             echo "Performing 'fill' task..."
-            create_benchmark_file "$SCRIPTS_DIR/$DATABASE_fill.tcl" "fill"
-            eval $HDB_DIR/hammerdbcli auto $SCRIPTS_DIR/$DATABASE_fill.tcl
+            create_benchmark_file "$SCRIPTS_DIR/${DATABASE}_fill.tcl" "fill"
+            eval ./hammerdbcli auto $SCRIPTS_DIR/${DATABASE}_fill.tcl
             ;;
         "bench")
             echo "Performing 'bench' task..."
-            create_benchmark_file "$SCRIPTS_DIR/$DATABASE_bench.tcl" "fill"
-            eval $HDB_DIR/hammerdbcli auto $SCRIPTS_DIR/$DATABASE_bench.tcl
+            create_benchmark_file "$SCRIPTS_DIR/${DATABASE}_bench.tcl" "bench"
+            eval ./hammerdbcli auto $SCRIPTS_DIR/${DATABASE}_bench.tcl
             ;;
         *)
             # This should never happen due to the task validation earlier.

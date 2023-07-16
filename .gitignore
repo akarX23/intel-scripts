@@ -9,6 +9,8 @@ QAT-SPR/wrk-scripts/1
 QAT-SPR/wrk-scripts/prod-logs
 QAT-SPR/wrk-scripts/*.txt
 
+HammerDB/scripts
+
 nginx/logs/
 nginx/1
 nginx/logs-history
