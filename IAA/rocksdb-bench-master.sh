@@ -2,7 +2,7 @@
 
 # Function to display the help message
 display_help() {
-    echo "Usage: ./master-bench.sh [options]"
+    echo "Usage: ./rocksdb-bench-master.sh [options]"
     echo "Options:"
     echo "  --num-iaa, -n              Set the number of IAA instances (default: $NUM_IAA)"
     echo "  --data-dir, -d             Set the database directory (default: $DATABASE_DIR)"
@@ -32,7 +32,7 @@ conduct_test() {
         echo "---------------------------------------------"
 
         # Fill database
-        ./benchmark_fill.sh -n $NUM_IAA -d $DATABASE_DIR -r $ROCKSDB_DIR -m "$MAX_OPS" -t $NUM_THREADS -j $MAX_BG_JOBS -b $TEST -na "$NUMA_ARGS"
+        ./benchmark_fill.sh -n $NUM_IAA -d $DATABASE_DIR -r $ROCKSDB_DIR -m "$MAX_OPS" -t $NUM_THREADS -j $MAX_BG_JOBS -b $TEST -na "$NUMA_ARGS" 2> /dev/null
 
     elif [ "$TASK" == "bench" ]; then
 
