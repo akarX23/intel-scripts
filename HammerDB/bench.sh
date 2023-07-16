@@ -8,7 +8,7 @@ DATA_WAREHOUSES=2
 TASKS="fill,bench"
 VIRTUAL_USERS=2
 DATABASE="mysql"
-SCRIPTS_DIR="scripts"
+SCRIPTS_DIR="$(pwd)/scripts"
 RAMPUP_DUR="1"
 RUN_TIMER="100"
 
