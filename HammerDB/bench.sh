@@ -17,16 +17,16 @@ print_help() {
     echo "Usage: $0 [OPTIONS]"
     echo "Options:"
     echo "  -h, --help                 Display this help message"
-    echo "  -d, --hdb-dir DIR         Set the HammerDB directory (default: /home/ubuntu/HammerDB-4.8)"
-    echo "  -u, --db-user USER     Set the DB username (default: root)"
-    echo "  -p, --db-password PASS Set the DB password (default: root)"
-    echo "  -w, --data-warehouses NUM Set the number of data warehouses (default: 2)"
-    echo "  -t, --tasks TASKS         Set the tasks to perform (default: fill,bench)"
-    echo "  -v, --virtual-users NUM   Set the number of virtual users (default: 2)"
-    echo "  -db, --database DB        Set the database type (default: mysql)"
-    echo "  -s, --scripts-dir DIR     Set the scripts directory (default: scripts)"
-    echo "  -r, --rampup-dur NUM      Set the rampup duration in minutes (default: 1)"
-    echo "  -rt, --run-timer NUM      Set the run timer in seconds (default: 100)"
+    echo "  -d, --hdb-dir DIR         Set the HammerDB directory (default: $HDB_DIR)"
+    echo "  -u, --db-user USER     Set the DB username (default: $MYSQL_USER)"
+    echo "  -p, --db-password PASS Set the DB password (default: $MYSQL_PASSWORD)"
+    echo "  -w, --data-warehouses NUM Set the number of data warehouses (default: $DATA_WAREHOUSES)"
+    echo "  -t, --tasks TASKS         Set the tasks to perform (default: $TASKS)"
+    echo "  -v, --virtual-users NUM   Set the number of virtual users (default: $VIRTUAL_USERS)"
+    echo "  -db, --database DB        Set the database type (default: $DATABASE)"
+    echo "  -s, --scripts-dir DIR     Set the scripts directory (default: $SCRIPTS_DIR)"
+    echo "  -r, --rampup-dur NUM      Set the rampup duration in minutes (default: $RAMPUP_DUR)"
+    echo "  -rt, --run-timer NUM      Set the run timer in seconds (default: $RUN_TIMER)"
     echo "Note: If an option is not provided, the default value will be used."
 }
 
@@ -166,7 +166,7 @@ validate_tasks "$TASKS"
 
 cd $HDB_DIR
 mkdir -p $SCRIPTS_DIR
-sudo ln -s /run/mysqld/mysqld.sock /tmp/mysql.sock 2> /dev/null
+ln -s /run/mysqld/mysqld.sock /tmp/mysql.sock 2> /dev/null
 
 # Loop over the tasks
 IFS=',' read -ra task_list <<< "$TASKS"
