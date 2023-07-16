@@ -242,15 +242,24 @@ done
 NOPM=$(cat $SCRIPTS_DIR/${DATABASE}_bench.log | grep "TEST RESULT" | awk '{print $7}')
 TPM=$(cat $SCRIPTS_DIR/${DATABASE}_bench.log | grep "TEST RESULT" | awk '{print $10}')
 
-echo "+++++++++++++++++++++++++++++++++++++++++++++"
+echo -e "\n+++++++++++++++++++++++++++++++++++++++++++++"
 echo "Summarizing results"
 echo -e "+++++++++++++++++++++++++++++++++++++++++++++\n"
 
-echo -e "$(hostnamectl | grep "Operating System")"
-echo "Kernel Version: $(hostnamectl | grep "Kernel" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')"
-echo -e "CPU: $(lscpu | grep "Model name" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')\n"
+if [[ "$DATABASE" == "mysql" ]]; then
+    # Execute the MySQL command to get the version and extract the necessary part
+    DATABASE_VERSION=$(mysql --version | awk '{print $3}' | cut -d '-' -f 1)
+    DB_TEXT="MySQL"
+elif [[ "$DATABASE" == "pg" ]]; then
+    # Execute the PostgreSQL command to get the version and extract the necessary part
+    DATABASE_VERSION=$(psql --version | awk '{print $3}')
+    DB_TEXT="PostgreSQL"
+fi
 
-echo "TEST RESULT:"
-echo "Database: $DATABASE"
+echo -e "\n$(hostnamectl | grep "Operating System")"
+echo "Kernel Version: $(hostnamectl | grep "Kernel" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')"
+echo "CPU: $(lscpu | grep "Model name" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')"
+echo -e "\n$DB_TEXT Version: $DATABASE_VERSION\n"
+
 echo "NOPM: $NOPM"
 echo "TPM: $TPM"

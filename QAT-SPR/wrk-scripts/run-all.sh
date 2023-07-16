@@ -140,7 +140,7 @@ echo "+++++++++++++++++++++++++++++++++++++++++++++"
 echo "Summarizing results"
 echo -e "+++++++++++++++++++++++++++++++++++++++++++++\n"
 
-echo -e "$(hostnamectl | grep "Operating System")"
+echo -e "\n$(hostnamectl | grep "Operating System")"
 echo "Kernel Version: $(hostnamectl | grep "Kernel" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')"
 echo "NGINX Version: $($nginx_bin_path -v 2>&1 | grep -oP 'nginx/\K[\d.]+')"
 echo "Number of QAT Devices: $(lspci | grep Eth | wc -l)"
