@@ -16,6 +16,7 @@ ITERATIONS=10000000
 DB_HOST=localhost
 DB_PORT=3306
 NUMA_ARGS="--cpunodebind=0 --membind=0"
+BENCH_DURATION=1
 
 # Help function to display script usage
 print_help() {
@@ -32,6 +33,7 @@ print_help() {
     echo "  -db, --database DB        Set the database type (default: $DATABASE)"
     echo "  -s, --scripts-dir DIR     Set the scripts directory (default: $SCRIPTS_DIR)"
     echo "  -r, --rampup-dur NUM      Set the rampup duration in minutes (default: $RAMPUP_DUR)"
+    echo "  -b, --bench-duration NUM  Set the benchmark duration in minutes (default: $BENCH_DURATION)"
     echo "  -pgsp, --pg-superuser-password PASS Set the PostgreSQL superuser password (default: $PG_SUPERUSER_PASSWORD)"
     echo "  -pgsu, --pg-superuser USER Set the PostgreSQL superuser (default: $PG_SUPERUSER)"
     echo "  -i, --iterations NUM      Set the number of iterations (default: $ITERATIONS)"
@@ -106,7 +108,7 @@ vudestroy
 diset tpcc ${DATABASE}_driver timed
 diset tpcc ${DATABASE}_timeprofile true
 diset tpcc ${DATABASE}_rampup ${RAMPUP_DUR}
-diset tpcc ${DATABASE}_duration 5
+diset tpcc ${DATABASE}_duration ${BENCH_DURATION}
 loadscript
 vuset vu ${VIRTUAL_USERS}
 vuset logtotemp 1
@@ -160,6 +162,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         -r | --rampup-dur)
             RAMPUP_DUR="$2"
+            shift 2
+            ;;
+        -b | --bench-duration)
+            BENCH_DURATION="$2"
             shift 2
             ;;
         -pgsp | --pg-superuser-password)
