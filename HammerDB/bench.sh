@@ -66,32 +66,33 @@ create_benchmark_file() {
 
     # Start with a common header
     cat <<EOF > "$benchmark_file"
-dbset db $DATABASE
+dbset db ${DATABASE}
 dbset bm tpc-c
-diset tpcc mysql_pass $MYSQL_PASSWORD   
-diset tpcc mysql_user $MYSQL_USER
+diset tpcc mysql_pass ${MYSQL_PASSWORD}   
+diset tpcc mysql_user ${MYSQL_USER}
 EOF
     
         # Add the task-specific content
         case "$task" in
             "fill")
                 cat <<EOF >> "$benchmark_file"
-diset tpcc mysql_count_ware $DATA_WAREHOUSES
-diset tpcc mysql_num_vu $VIRTUAL_USERS
+diset tpcc mysql_count_ware ${DATA_WAREHOUSES}
+diset tpcc mysql_num_vu ${VIRTUAL_USERS}
 buildschema
 EOF
                 ;;
             "bench")
                 cat <<EOF >> "$benchmark_file"
+vudestroy
 diset tpcc mysql_driver timed
 diset tpcc mysql_timeprofile true
-diset tpcc mysql_rampup $RAMPUP_DUR
+diset tpcc mysql_rampup ${RAMPUP_DUR}
 diset tpcc mysql_duration 5
 loadscript
-vuset vu $VIRTUAL_USERS
+vuset vu ${VIRTUAL_USERS}
 vucreate
 vurun
-runtimer $RUN_TIMER
+runtimer ${RUN_TIMER}
 vudestroy
 EOF
                 ;;
