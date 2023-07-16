@@ -111,6 +111,7 @@ echo -e "+++++++++++++++++++++++++++++++++++++++++++++\n"
 
 eval $nginx_bin_path -c $nginx_qat_conf_path
 
+mkdir -p logs
 sar  -n DEV $(($(( $duration )) * 4)) 1 > logs/qat_sar.log &
 
 run_workloads --with-qat
