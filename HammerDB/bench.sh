@@ -15,6 +15,7 @@ PG_SUPERUSER=postgres
 ITERATIONS=10000000
 DB_HOST=localhost
 DB_PORT=3306
+NUMA_ARGS="--cpunodebind=0 --membind=0"
 
 # Help function to display script usage
 print_help() {
@@ -34,6 +35,7 @@ print_help() {
     echo "  -pgsp, --pg-superuser-password PASS Set the PostgreSQL superuser password (default: $PG_SUPERUSER_PASSWORD)"
     echo "  -pgsu, --pg-superuser USER Set the PostgreSQL superuser (default: $PG_SUPERUSER)"
     echo "  -i, --iterations NUM      Set the number of iterations (default: $ITERATIONS)"
+    echo "  -n, --numa-args ARGS      Set the NUMA arguments (default: $NUMA_ARGS)"
     echo "  -h, --help                 Display this help message"
     echo "Note: If an option is not provided, the default value will be used."
 }
@@ -172,6 +174,10 @@ while [[ $# -gt 0 ]]; do
             ITERATIONS="$2"
             shift 2
             ;;
+        -n | --numa-args)
+            NUMA_ARGS="$2"
+            shift 2
+            ;;
         -host | --db-host)
             DB_HOST="$2"
             shift 2
@@ -208,12 +214,12 @@ for task in "${task_list[@]}"; do
         "fill")
             echo "Performing 'fill' task..."
             create_benchmark_file "$SCRIPTS_DIR/${DATABASE}_fill.tcl" "fill"
-            eval ./hammerdbcli auto $SCRIPTS_DIR/${DATABASE}_fill.tcl
+            numactl $NUMA_ARGS ./hammerdbcli auto $SCRIPTS_DIR/${DATABASE}_fill.tcl
             ;;
         "bench")
             echo "Performing 'bench' task..."
             create_benchmark_file "$SCRIPTS_DIR/${DATABASE}_bench.tcl" "bench"
-            eval ./hammerdbcli auto $SCRIPTS_DIR/${DATABASE}_bench.tcl
+            numactl $NUMA_ARGS ./hammerdbcli auto $SCRIPTS_DIR/${DATABASE}_bench.tcl
             ;;
         *)
             # This should never happen due to the task validation earlier.
