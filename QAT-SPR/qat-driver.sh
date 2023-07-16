@@ -52,6 +52,7 @@ sudo apt-get install -y yasm
 sudo apt-get install -y zlib1g-dev
 sudo apt-get install -y libssl-dev
 
+mkdir -p $ICP_ROOT
 cd $ICP_ROOT
 tar -zxof QAT*.tar.gz
 chmod -R o-rwx *
