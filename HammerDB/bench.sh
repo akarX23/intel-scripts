@@ -256,10 +256,10 @@ elif [[ "$DATABASE" == "pg" ]]; then
     DB_TEXT="PostgreSQL"
 fi
 
-echo -e "\n$(hostnamectl | grep "Operating System")"
+echo -e "$(hostnamectl | grep "Operating System" | tr -s " ")"
 echo "Kernel Version: $(hostnamectl | grep "Kernel" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')"
 echo "CPU: $(lscpu | grep "Model name" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')"
-echo -e "\n$DB_TEXT Version: $DATABASE_VERSION\n"
+echo -e "$DB_TEXT Version: $DATABASE_VERSION\n"
 
 echo "NOPM: $NOPM"
 echo "TPM: $TPM"
