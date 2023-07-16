@@ -85,7 +85,7 @@ EOF
     if [[ "$DATABASE" == "pg" ]]; then
         cat <<EOF >> "$benchmark_file"
 diset tpcc pg_superuserpass ${PG_SUPERUSER_PASSWORD}
-diset tpcc pg_superuserpass ${PG_SUPERUSER}
+diset tpcc pg_superuser ${PG_SUPERUSER}
 EOF
     fi 
         # Add the task-specific content
