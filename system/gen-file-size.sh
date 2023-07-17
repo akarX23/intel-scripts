@@ -1,7 +1,7 @@
 #!/bin/bash
 
 output_file="$2"
-filesize_kb=$2
+filesize_kb=$1
 
 # Calculate the number of lines needed to fill the file with zeroes
 lines=$((filesize_kb * 1024 / 2)) # Divide by 2 because each line consists of 2 characters: '0\n'
