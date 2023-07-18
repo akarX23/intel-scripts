@@ -9,5 +9,5 @@ lines=$((filesize_kb * 1024 / 2)) # Divide by 2 because each line consists of 2 
 # Generate the content with zeroes and write to the file
 for (( i=1; i<=$lines; i++ ))
 do
-  echo -ne "0\n" >> "$output_file"
+  echo -ne "0" >> "$output_file"
 done
