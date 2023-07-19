@@ -2,7 +2,7 @@
 
 log_dir=logs
 VERBOSE=false
-
+ROCKSDB_DIR="/home/akarx/rocksdb"
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -13,6 +13,11 @@ while [[ $# -gt 0 ]]; do
       shift # past argument
       shift
       ;;
+    --rocksdb-dir | -r )
+        ROCKSDB_DIR="$2"
+        shift 
+        shift
+        ;;
     --verbose | -v)
       VERBOSE=true
       shift # past argument
