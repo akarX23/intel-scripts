@@ -89,10 +89,11 @@ sudo sh -c "sync;echo 3 > /proc/sys/vm/drop_caches"
 
 export LD_LIBRARY_PATH=/usr/lib:$LD_LIBRARY_PATH  # For QPL to load libaccel-config
 
+i = 0
 # Fillseq
 echo "PREPARE DATA"
-for (( i = 0; i < $NUM_IAA; i++ ))
-do
+# for (( i = 0; i < $NUM_IAA; i++ ))
+# do
   rm -rf "$DATABASE_DIR/rocksdb_${BENCH_TYPE}_${i}"
   mkdir -p "$DATABASE_DIR/rocksdb_${BENCH_TYPE}_${i}"
   numactl $NUMA_ARGS "$ROCKSDB_DIR/db_bench" --benchmarks="fillseq" --db="$DATABASE_DIR/rocksdb_${BENCH_TYPE}_${i}" \
@@ -103,7 +104,7 @@ do
   --use_direct_reads=false --use_direct_io_for_flush_and_compaction=false \
   --max_background_jobs="$MAX_BG_JOBS" --subcompactions=5 &
   pids[${i}]=$!
-done
+# done
 
 for pid in ${pids[*]}; do
   wait $pid

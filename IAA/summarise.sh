@@ -28,6 +28,9 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+# Count IAA devices
+iax_dev_id="0cfe"
+NUM_IAA=$(lspci -d:${iax_dev_id} | wc -l)
 
 echo -e "\n$(hostnamectl | grep "Operating System")"
 echo "Kernel Version: $(hostnamectl | grep "Kernel" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')"
