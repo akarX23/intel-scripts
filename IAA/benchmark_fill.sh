@@ -89,7 +89,7 @@ sudo sh -c "sync;echo 3 > /proc/sys/vm/drop_caches"
 
 export LD_LIBRARY_PATH=/usr/lib:$LD_LIBRARY_PATH  # For QPL to load libaccel-config
 
-i = 0
+i=0
 # Fillseq
 echo "PREPARE DATA"
 # for (( i = 0; i < $NUM_IAA; i++ ))
