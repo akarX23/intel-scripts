@@ -11,6 +11,19 @@ nginx_wqat_cong_path="/home/akarx/QAT-installs/NGINX/conf/wqat.conf"
 threads=28
 connections=2000
 
+function display_usage() {
+  echo "Usage: $0 [options]"
+  echo "Options:"
+  echo "  --server <address>        Set the server address (default: $server)"
+  echo "  --duration <time>        Set the duration in seconds (default: $duration)"
+  echo "  --nginx-bin-path <path>  Set the NGINX binary path (default: $nginx_bin_path)"
+  echo "  --nginx-qat-conf-path <path> Set the NGINX QAT configuration path (default: $nginx_qat_conf_path)"
+  echo "  --nginx-wqat-conf-path <path> Set the NGINX WQAT configuration path (default: $nginx_wqat_conf_path)"
+  echo "  --threads <num>          Set the number of threads (default: $threads)"
+  echo "  --connections <num>      Set the number of connections (default: $connections)"
+  echo "  -h, --help               Display this help message"
+}
+
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
   key="$1"
@@ -50,9 +63,14 @@ while [[ $# -gt 0 ]]; do
       shift # past argument
       shift # past value
       ;;
+    -h|--help) # Display help message
+      display_usage
+      exit 0
+      ;;
     *) # unknown option
-      shift # past argument
-      exit
+      echo "Unknown Option: $1"
+      display_usage
+      exit 1
       ;;
   esac
 done
@@ -139,11 +157,5 @@ wait
 echo "+++++++++++++++++++++++++++++++++++++++++++++"
 echo "Summarizing results"
 echo -e "+++++++++++++++++++++++++++++++++++++++++++++\n"
-
-echo -e "\n$(hostnamectl | grep "Operating System")"
-echo "Kernel Version: $(hostnamectl | grep "Kernel" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')"
-echo "NGINX Version: $($nginx_bin_path -v 2>&1 | grep -oP 'nginx/\K[\d.]+')"
-echo "Number of QAT Devices: $(lspci | grep Eth | wc -l)"
-echo -e "CPU: $(lscpu | grep "Model name" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')\n"
 
 ./summarise.sh

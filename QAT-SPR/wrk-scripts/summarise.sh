@@ -141,6 +141,12 @@ if [ -z "$log_files" ]; then
   exit 1
 fi
 
+echo -e "\n$(hostnamectl | grep "Operating System")"
+echo "Kernel Version: $(hostnamectl | grep "Kernel" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')"
+echo "NGINX Version: $($nginx_bin_path -v 2>&1 | grep -oP 'nginx/\K[\d.]+')"
+echo "Number of QAT Devices: $(lspci | grep Eth | wc -l)"
+echo -e "CPU: $(lscpu | grep "Model name" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')\n"
+
 # Calculate the width of the table
 table_width=209
 

@@ -123,16 +123,17 @@ sudo sh -c "sync;echo 3 > /proc/sys/vm/drop_caches"
 
 export LD_LIBRARY_PATH=/usr/lib:$LD_LIBRARY_PATH  # For QPL to load libaccel-config
 
+i=0
 dbs_size=0
-for (( i = 0; i < $NUM_IAA; i++ ))
-do
+# for (( i = 0; i < $NUM_IAA; i++ ))
+# do
   if [ ! -e "$DATABASE_DIR/rocksdb_${BENCH_TYPE}_${i}" ]; then
     echo "ERROR: db files missing from "$DATABASE_DIR/rocksdb_${BENCH_TYPE}_${i}", please run _fill.sh script to populate data files"
     exit 1
   fi
   db_size=$(du -s "$DATABASE_DIR/rocksdb_${BENCH_TYPE}_${i}" | cut -f 1)
   dbs_size=$(($dbs_size+$db_size))
-done
+# done
 dbs_size=$(echo "scale=2;$dbs_size/1024/1024" | bc)
 
 mkdir -p logs > /dev/null 2>&1
@@ -141,7 +142,7 @@ echo "$dbs_size" > logs/dbs_size_${BENCH_TYPE}
 
 # Readrandomwriterandom
 echo "$RW_PERCENT/$(expr 100 - $RW_PERCENT) READ/WRITE RocksDB WORKLOAD"
-i=0
+
 #for (( i = 0; i < $NUM_IAA; i++ ))
 #do
   numactl $NUMA_ARGS "$ROCKSDB_DIR/db_bench" --benchmarks="readrandomwriterandom,stats" --statistics --db="$DATABASE_DIR/rocksdb_${BENCH_TYPE}_${i}" --use_existing_db \

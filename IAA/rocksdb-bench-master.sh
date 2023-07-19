@@ -32,7 +32,7 @@ conduct_test() {
         echo "---------------------------------------------"
 
         # Fill database
-        ./benchmark_fill.sh -n $NUM_IAA -d $DATABASE_DIR -r $ROCKSDB_DIR -m "$MAX_OPS" -t $NUM_THREADS -j $MAX_BG_JOBS -b $TEST -na "$NUMA_ARGS" 2> /dev/null
+        ./benchmark_fill.sh -n $NUM_IAA -d $DATABASE_DIR -r $ROCKSDB_DIR -m "$MAX_OPS" -t $NUM_THREADS -j $MAX_BG_JOBS -b $TEST -na "$NUMA_ARGS"
 
     elif [ "$TASK" == "bench" ]; then
 
@@ -140,12 +140,5 @@ done
 echo -e "\n---------------------------------------------"
 echo "Summarizing Results"
 echo "---------------------------------------------"
-
-echo -e "\n$(hostnamectl | grep "Operating System")"
-echo "Kernel Version: $(hostnamectl | grep "Kernel" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')"
-echo "RocksDB Version: $($ROCKSDB_DIR/db_bench --version | cut -d " " -f 3)"
-echo "ZSTD Version: $(zstd --version | grep -oP 'v\d+\.\d+\.\d+')"
-echo "CPU: $(lscpu | grep "Model name" | cut -d ":" -f 2 | tr -s " " | head -n 1)"
-echo "Number of IAA devices: $NUM_IAA"
 
 ./summarise.sh

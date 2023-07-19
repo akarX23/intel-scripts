@@ -4,6 +4,7 @@
 ps aux | grep nginx | awk '{print $2}' | xargs kill 2> /dev/null
 
 # Replacing QAT config and restart QAT
+echo -e "Enabling QAT...\n"
 cp /home/akarx/QAT-installs/Engine/qat_hw_config/4xxx/multi_process/4xxx_dev0.conf /etc/4xxx_dev1.conf
 cp /home/akarx/QAT-installs/Engine/qat_hw_config/4xxx/multi_process/4xxx_dev0.conf /etc/4xxx_dev0.conf
 service qat_service restart
