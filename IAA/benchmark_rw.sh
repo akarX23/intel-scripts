@@ -123,17 +123,16 @@ sudo sh -c "sync;echo 3 > /proc/sys/vm/drop_caches"
 
 export LD_LIBRARY_PATH=/usr/lib:$LD_LIBRARY_PATH  # For QPL to load libaccel-config
 
-i=0
 dbs_size=0
-# for (( i = 0; i < $NUM_IAA; i++ ))
-# do
+for (( i = 0; i < $NUM_IAA; i++ ))
+do
   if [ ! -e "$DATABASE_DIR/rocksdb_${BENCH_TYPE}_${i}" ]; then
     echo "ERROR: db files missing from "$DATABASE_DIR/rocksdb_${BENCH_TYPE}_${i}", please run _fill.sh script to populate data files"
     exit 1
   fi
   db_size=$(du -s "$DATABASE_DIR/rocksdb_${BENCH_TYPE}_${i}" | cut -f 1)
   dbs_size=$(($dbs_size+$db_size))
-# done
+done
 dbs_size=$(echo "scale=2;$dbs_size/1024/1024" | bc)
 
 mkdir -p logs > /dev/null 2>&1
@@ -143,24 +142,30 @@ echo "$dbs_size" > logs/dbs_size_${BENCH_TYPE}
 # Readrandomwriterandom
 echo "$RW_PERCENT/$(expr 100 - $RW_PERCENT) READ/WRITE RocksDB WORKLOAD"
 
-#for (( i = 0; i < $NUM_IAA; i++ ))
-#do
-  numactl $NUMA_ARGS "$ROCKSDB_DIR/db_bench" --benchmarks="readrandomwriterandom,stats" --statistics --db="$DATABASE_DIR/rocksdb_${BENCH_TYPE}_${i}" --use_existing_db \
-  --key_size=16 --value_size=32 --block_size=16384 --num="$MAX_OPS" --bloom_bits=10 --duration="$DURATION" --threads="$NUM_THREADS" --disable_wal \
-  --compression_type="$COMPRESSION_TYPE" --compressor_options="$COMPRESSION_OPTIONS" \
-  --cache_size=-1 --cache_index_and_filter_blocks=false --compressed_cache_size=-1 --row_cache_size=0 \
-  --use_direct_reads=false --use_direct_io_for_flush_and_compaction=false \
-  --max_background_jobs="$MAX_BG_JOBS" --subcompactions=5 --readwritepercent="$RW_PERCENT" \
-  --max_write_buffer_number=20 --min_write_buffer_number_to_merge=1 \
-  --level0_file_num_compaction_trigger=10 --level0_slowdown_writes_trigger=60 --level0_stop_writes_trigger=120 --max_bytes_for_level_base=671088640 > logs/output_${BENCH_TYPE}_${i}.txt 2>&1 &
-  pids[${i}]=$!
-#done
+for (( i = 0; i < $NUM_IAA; i++ ))
+do
+    if [ "$i" -eq 0 ]; then
+    NUMA_ARGS="-C 0-55"
+    else
+    NUMA_ARGS="-C 56-111"
+    fi
+
+    numactl $NUMA_ARGS "$ROCKSDB_DIR/db_bench" --benchmarks="readrandomwriterandom,stats" --statistics --db="$DATABASE_DIR/rocksdb_${BENCH_TYPE}_${i}" --use_existing_db \
+    --key_size=16 --value_size=32 --block_size=16384 --num="$MAX_OPS" --bloom_bits=10 --duration="$DURATION" --threads="$NUM_THREADS" --disable_wal \
+    --compression_type="$COMPRESSION_TYPE" --compressor_options="$COMPRESSION_OPTIONS" \
+    --cache_size=-1 --cache_index_and_filter_blocks=false --compressed_cache_size=-1 --row_cache_size=0 \
+    --use_direct_reads=false --use_direct_io_for_flush_and_compaction=false \
+    --max_background_jobs="$MAX_BG_JOBS" --subcompactions=5 --readwritepercent="$RW_PERCENT" \
+    --max_write_buffer_number=20 --min_write_buffer_number_to_merge=1 \
+    --level0_file_num_compaction_trigger=10 --level0_slowdown_writes_trigger=60 --level0_stop_writes_trigger=120 --max_bytes_for_level_base=671088640 > logs/output_${BENCH_TYPE}_${i}.txt 2>&1 &
+    pids[${i}]=$!
+done
 
 sar $DURATION 1 > logs/cpu_util_${BENCH_TYPE}.txt &
 
 countdown $DURATION ${pids[0]}
 for pid in ${pids[*]}; do
-  wait $pid
+    wait $pid
 done
 
 tpt_rw=$(cat logs/output_${BENCH_TYPE}_* | grep readrandomwriterandom | tr -s " " | cut -d " " -f 5 | paste -s -d+ - | bc)
