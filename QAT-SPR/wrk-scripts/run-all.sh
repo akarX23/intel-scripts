@@ -104,7 +104,7 @@ run_workloads () {
   echo "---------------------------------------------"
   echo "Running wrk with 1MB size"
   echo "---------------------------------------------"
-  numactl -C 16-55 ./run-wrk.sh --server $server --size 1MB --duration $duration --threads 24 --connections $connections $1
+  numactl -C 56-111 ./run-wrk.sh --server $server --size 1MB --duration $duration --threads $threads --connections $connections $1
   echo
 }
 
@@ -128,6 +128,8 @@ echo "Running with QAT Enabled"
 echo -e "+++++++++++++++++++++++++++++++++++++++++++++\n"
 
 eval $nginx_bin_path -c $nginx_qat_conf_path
+sleep 3
+./alloc_nginx.sh
 
 mkdir -p logs
 # sar  -n DEV $(($(( $duration )) * 4)) 1 > logs/qat_sar.log &
@@ -147,6 +149,8 @@ echo -e "+++++++++++++++++++++++++++++++++++++++++++++\n"
 
 flush_cache
 eval $nginx_bin_path -c $nginx_wqat_cong_path
+sleep 3
+./alloc_nginx.sh
 
 # sar  -n DEV $(($(( $duration )) * 4)) 1 > logs/sar.log &
 
