@@ -37,7 +37,7 @@ echo "Kernel Version: $(hostnamectl | grep "Kernel" | cut -d ":" -f 2 | sed -e '
 echo "RocksDB Version: $($ROCKSDB_DIR/db_bench --version | cut -d " " -f 3)"
 echo "ZSTD Version: $(zstd --version | grep -oP 'v\d+\.\d+\.\d+')"
 echo "CPU: $(lscpu | grep "Model name" | cut -d ":" -f 2 | tr -s " " | head -n 1)"
-echo "Number of IAA devices: $NUM_IAA"
+echo "Number of Enabled IAA devices: $NUM_IAA"
 
 # count iax instances
 iax_dev_id="0cfe"
