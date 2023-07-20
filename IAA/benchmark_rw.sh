@@ -142,13 +142,13 @@ echo "$dbs_size" > logs/dbs_size_${BENCH_TYPE}
 # Readrandomwriterandom
 echo "$RW_PERCENT/$(expr 100 - $RW_PERCENT) READ/WRITE RocksDB WORKLOAD"
 
-for (( i = 0; i < $NUM_IAA; i++ ))
-do
-    if [ "$i" -eq 0 ]; then
-    NUMA_ARGS="-C 0-55"
-    else
-    NUMA_ARGS="-C 56-111"
-    fi
+# for (( i = 0; i < $NUM_IAA; i++ ))
+# do
+    # if [ "$i" -eq 0 ]; then
+    # NUMA_ARGS="-C 0-55"
+    # else
+    # NUMA_ARGS="-C 56-111"
+    # fi
 
     numactl $NUMA_ARGS "$ROCKSDB_DIR/db_bench" --benchmarks="readrandomwriterandom,stats" --statistics --db="$DATABASE_DIR/rocksdb_${BENCH_TYPE}_${i}" --use_existing_db \
     --key_size=16 --value_size=32 --block_size=16384 --num="$MAX_OPS" --bloom_bits=10 --duration="$DURATION" --threads="$NUM_THREADS" --disable_wal \
@@ -159,7 +159,7 @@ do
     --max_write_buffer_number=20 --min_write_buffer_number_to_merge=1 \
     --level0_file_num_compaction_trigger=10 --level0_slowdown_writes_trigger=60 --level0_stop_writes_trigger=120 --max_bytes_for_level_base=671088640 > logs/output_${BENCH_TYPE}_${i}.txt 2>&1 &
     pids[${i}]=$!
-done
+# done
 
 sar $DURATION 1 > logs/cpu_util_${BENCH_TYPE}.txt &
 

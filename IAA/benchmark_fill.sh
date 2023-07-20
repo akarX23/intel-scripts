@@ -91,13 +91,13 @@ export LD_LIBRARY_PATH=/usr/lib:$LD_LIBRARY_PATH  # For QPL to load libaccel-con
 
 # Fillseq
 echo "PREPARE DATA"
-for (( i = 0; i < $NUM_IAA; i++ ))
-do
-    if [ "$i" -eq 0 ]; then
-    NUMA_ARGS="-C 0-55"
-    else
-    NUMA_ARGS="-C 56-111"
-    fi
+# for (( i = 0; i < $NUM_IAA; i++ ))
+# do
+    # if [ "$i" -eq 0 ]; then
+    # NUMA_ARGS="-C 0-55"
+    # else
+    # NUMA_ARGS="-C 56-111"
+    # fi
 
     rm -rf "$DATABASE_DIR/rocksdb_${BENCH_TYPE}_${i}"
     mkdir -p "$DATABASE_DIR/rocksdb_${BENCH_TYPE}_${i}"
@@ -109,7 +109,7 @@ do
     --use_direct_reads=false --use_direct_io_for_flush_and_compaction=false \
     --max_background_jobs="$MAX_BG_JOBS" --subcompactions=5 &
     pids[${i}]=$!
-done
+# done
 
 for pid in ${pids[*]}; do
   wait $pid
