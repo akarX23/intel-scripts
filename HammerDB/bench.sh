@@ -18,8 +18,6 @@ NUMA_ARGS="--cpunodebind=0 --membind=0"
 DB_CORES="0-$(nproc)"
 BENCH_DURATION=1
 OUTPUT_DIR="$(pwd)/HammerDB-Run-$(date +%Y-%m-%d_%H-%M-%S)"
-SCRIPTS_DIR="$OUTPUT_DIR/scripts"
-LOG_DIR="$OUTPUT_DIR/logs"
 
 # Help function to display script usage
 print_help() {
@@ -221,6 +219,9 @@ if ! is_valid_database "$DATABASE"; then
 fi
 
 validate_tasks "$TASKS"
+
+SCRIPTS_DIR="$OUTPUT_DIR/scripts"
+LOG_DIR="$OUTPUT_DIR/logs"
 
 cd $HDB_DIR
 mkdir -p $SCRIPTS_DIR
