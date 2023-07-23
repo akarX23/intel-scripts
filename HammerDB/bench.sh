@@ -220,7 +220,7 @@ fi
 
 validate_tasks "$TASKS"
 
-OUTPUT_DIR="$OUTPUT_DIR/HammerDB-Run-$(date +%Y-%m-%d_%H-%M-%S)"
+OUTPUT_DIR="$OUTPUT_DIR/HammerDB-Run-$(date +%Y-%m-%d_%H:%M:%S)"
 SCRIPTS_DIR="$OUTPUT_DIR/scripts"
 LOG_DIR="$OUTPUT_DIR/logs"
 
@@ -251,7 +251,13 @@ for task in "${task_list[@]}"; do
             echo -e "+++++++++++++++++++++++++++++++++++++++++++++\n"
             create_benchmark_file "$SCRIPTS_DIR/${DATABASE}_fill.tcl" "fill"
             echo "Created HammerDB fill scripts at $SCRIPTS_DIR/${DATABASE}_fill.tcl"
-            numactl $NUMA_ARGS ./hammerdbcli auto $SCRIPTS_DIR/${DATABASE}_fill.tcl $([ "$VERBOSE_OPTION" = "true" ] && echo "| tee \"$LOG_DIR/${DATABASE}_fill.log\"") > "$LOG_DIR/${DATABASE}_fill.log"
+            if [ "$VERBOSE" = "true" ]; then
+                # If --verbose option is provided, use tee for both stdout and log file
+                numactl $NUMA_ARGS ./hammerdbcli auto $SCRIPTS_DIR/${DATABASE}_fill.tcl | tee "$LOG_DIR/${DATABASE}_fill.log"
+            else
+                # If --verbose option is not provided, redirect stdout to log file only
+                numactl $NUMA_ARGS ./hammerdbcli auto $SCRIPTS_DIR/${DATABASE}_fill.tcl > "$LOG_DIR/${DATABASE}_fill.log"
+            fi            
             ;;
         "bench")
             echo -e "\n+++++++++++++++++++++++++++++++++++++++++++++"
@@ -259,7 +265,13 @@ for task in "${task_list[@]}"; do
             echo -e "+++++++++++++++++++++++++++++++++++++++++++++\n"
             create_benchmark_file "$SCRIPTS_DIR/${DATABASE}_bench.tcl" "bench"
             echo "Created HammerDB bench scripts at $SCRIPTS_DIR/${DATABASE}_bench.tcl"
-            numactl $NUMA_ARGS ./hammerdbcli auto $SCRIPTS_DIR/${DATABASE}_bench.tcl $([ "$VERBOSE_OPTION" = "true" ] && echo "| tee \"$LOG_DIR/${DATABASE}_bench.log\"") > "$LOG_DIR/${DATABASE}_bench.log"
+            if [ "$VERBOSE" = "true" ]; then
+                # If --verbose option is provided, use tee for both stdout and log file
+                numactl $NUMA_ARGS ./hammerdbcli auto $SCRIPTS_DIR/${DATABASE}_bench.tcl | tee "$LOG_DIR/${DATABASE}_bench.log"
+            else
+                # If --verbose option is not provided, redirect stdout to log file only
+                numactl $NUMA_ARGS ./hammerdbcli auto $SCRIPTS_DIR/${DATABASE}_bench.tcl > "$LOG_DIR/${DATABASE}_bench.log"
+            fi            
             ;;
         *)
             # This should never happen due to the task validation earlier.
@@ -306,7 +318,7 @@ Database Core Affinity: ${DB_CORES}
 HAMMER DB
 --------------------------
 HammerDB Path: ${HDB_DIR}
-HammerDB Client Core Affinity: ${HammerDB_CORE_OR_NODE}
+${HammerDB_CORE_OR_NODE}
 Data Warehouses: ${DATA_WAREHOUSES}
 Virtual Users: ${VIRTUAL_USERS}
 Rampup Duration: ${RAMPUP_DUR}
@@ -335,6 +347,15 @@ NOPM: ${NOPM}
 TPM: ${TPM}
 EOF
 
-if [ "$VERBOSE_OPTION" = "true" ]; then
+echo -e "Scripts can be found at: $SCRIPTS_DIR"
+echo -e "Logs can be found at: $LOG_DIR"
+echo -e "Summary can be found at: $OUTPUT_DIR/summary"
+echo -e "--------------------------
+RESULTS
+--------------------------
+NOPM: ${NOPM}
+TPM: ${TPM}"
+
+if [ "$VERBOSE" = "true" ]; then
     cat "$OUTPUT_DIR/summary"
 fi
