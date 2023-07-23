@@ -17,7 +17,7 @@ DB_PORT=3306
 NUMA_ARGS="--cpunodebind=0 --membind=0"
 DB_CORES="0-$(nproc)"
 BENCH_DURATION=1
-OUTPUT_DIR="$(pwd)/HammerDB-Run-$(date +%Y-%m-%d_%H-%M-%S)"
+OUTPUT_DIR=$(pwd)
 
 # Help function to display script usage
 print_help() {
@@ -220,6 +220,7 @@ fi
 
 validate_tasks "$TASKS"
 
+OUTPUT_DIR="$OUTPUT_DIR/HammerDB-Run-$(date +%Y-%m-%d_%H-%M-%S)"
 SCRIPTS_DIR="$OUTPUT_DIR/scripts"
 LOG_DIR="$OUTPUT_DIR/logs"
 
@@ -268,8 +269,8 @@ for task in "${task_list[@]}"; do
     esac
 done
 
-NOPM=$(cat $SCRIPTS_DIR/${DATABASE}_bench.log | grep "TEST RESULT" | awk '{print $7}')
-TPM=$(cat $SCRIPTS_DIR/${DATABASE}_bench.log | grep "TEST RESULT" | awk '{print $10}')
+NOPM=$(cat $LOG_DIR/${DATABASE}_bench.log | grep "TEST RESULT" | awk '{print $7}')
+TPM=$(cat $LOG_DIR/${DATABASE}_bench.log | grep "TEST RESULT" | awk '{print $10}')
 
 echo -e "\n+++++++++++++++++++++++++++++++++++++++++++++"
 echo "Summarizing results"
