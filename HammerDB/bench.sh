@@ -16,6 +16,7 @@ ITERATIONS=10000000
 DB_HOST=localhost
 DB_PORT=3306
 NUMA_ARGS="--cpunodebind=0 --membind=0"
+DB_CORES="0-$(nproc)"
 BENCH_DURATION=1
 
 # Help function to display script usage
@@ -31,6 +32,7 @@ print_help() {
     echo "  -t, --tasks TASKS         Set the tasks to perform (default: $TASKS)"
     echo "  -v, --virtual-users NUM   Set the number of virtual users (default: $VIRTUAL_USERS)"
     echo "  -db, --database DB        Set the database type (default: $DATABASE)"
+    echo "  -dbc, --db-cores CORES    Set the database cores (default: $DB_CORES)"
     echo "  -s, --scripts-dir DIR     Set the scripts directory (default: $SCRIPTS_DIR)"
     echo "  -r, --rampup-dur NUM      Set the rampup duration in minutes (default: $RAMPUP_DUR)"
     echo "  -b, --bench-duration NUM  Set the benchmark duration in minutes (default: $BENCH_DURATION)"
@@ -192,6 +194,10 @@ while [[ $# -gt 0 ]]; do
             DB_PORT="$2"
             shift 2
             ;;
+        -dbc | --db-cores) 
+            DB_CORES="$2"
+            shift 2
+            ;;
         *)
             echo "Invalid option: $1"
             print_help
@@ -211,7 +217,20 @@ validate_tasks "$TASKS"
 
 cd $HDB_DIR
 mkdir -p $SCRIPTS_DIR
-ln -s /run/mysqld/mysqld.sock /tmp/mysql.sock 2> /dev/null
+
+
+if [[ "$DATABASE" == "mysql" ]]; then
+    # Execute the MySQL command to get the version and extract the necessary part
+    DATABASE_VERSION=$(mysql --version | awk '{print $3}' | cut -d '-' -f 1)
+    DB_TEXT="MySQL"
+    ln -s /run/mysqld/mysqld.sock /tmp/mysql.sock 2> /dev/null
+    sudo taskset -apc $DB_CORES $(pgrep mysql | tr '\n' ',')
+elif [[ "$DATABASE" == "pg" ]]; then
+    # Execute the PostgreSQL command to get the version and extract the necessary part
+    DATABASE_VERSION=$(psql --version | awk '{print $3}')
+    DB_TEXT="PostgreSQL"
+    sudo taskset -apc $DB_CORES $(pgrep postgres | tr '\n' ',')
+fi
 
 # Loop over the tasks
 IFS=',' read -ra task_list <<< "$TASKS"
@@ -245,16 +264,6 @@ TPM=$(cat $SCRIPTS_DIR/${DATABASE}_bench.log | grep "TEST RESULT" | awk '{print 
 echo -e "\n+++++++++++++++++++++++++++++++++++++++++++++"
 echo "Summarizing results"
 echo -e "+++++++++++++++++++++++++++++++++++++++++++++\n"
-
-if [[ "$DATABASE" == "mysql" ]]; then
-    # Execute the MySQL command to get the version and extract the necessary part
-    DATABASE_VERSION=$(mysql --version | awk '{print $3}' | cut -d '-' -f 1)
-    DB_TEXT="MySQL"
-elif [[ "$DATABASE" == "pg" ]]; then
-    # Execute the PostgreSQL command to get the version and extract the necessary part
-    DATABASE_VERSION=$(psql --version | awk '{print $3}')
-    DB_TEXT="PostgreSQL"
-fi
 
 echo -e "$(hostnamectl | grep "Operating System" | tr -s " ")"
 echo "Kernel Version: $(hostnamectl | grep "Kernel" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')"
