@@ -348,12 +348,14 @@ EOF
 echo -e "Scripts can be found at: $SCRIPTS_DIR"
 echo -e "Logs can be found at: $LOG_DIR"
 echo -e "Summary can be found at: $OUTPUT_DIR/summary"
-echo -e "--------------------------
+
+
+if [ "$VERBOSE" = "true" ]; then
+    cat "$OUTPUT_DIR/summary"
+else
+    echo -e "--------------------------
 RESULTS
 --------------------------
 NOPM: ${NOPM}
 TPM: ${TPM}"
-
-if [ "$VERBOSE" = "true" ]; then
-    cat "$OUTPUT_DIR/summary"
 fi
