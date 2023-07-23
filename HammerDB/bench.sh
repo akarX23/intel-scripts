@@ -8,7 +8,6 @@ DATA_WAREHOUSES=2
 TASKS="fill,bench"
 VIRTUAL_USERS=2
 DATABASE="mysql"
-SCRIPTS_DIR="$(pwd)/scripts"
 RAMPUP_DUR="1"
 PG_SUPERUSER_PASSWORD=postgres
 PG_SUPERUSER=postgres
@@ -18,6 +17,9 @@ DB_PORT=3306
 NUMA_ARGS="--cpunodebind=0 --membind=0"
 DB_CORES="0-$(nproc)"
 BENCH_DURATION=1
+OUTPUT_DIR="$(pwd)/HammerDB-Run-$(date +%Y-%m-%d_%H-%M-%S)"
+SCRIPTS_DIR="$OUTPUT_DIR/scripts"
+LOG_DIR="$OUTPUT_DIR/logs"
 
 # Help function to display script usage
 print_help() {
@@ -32,14 +34,15 @@ print_help() {
     echo "  -t, --tasks TASKS         Set the tasks to perform (default: $TASKS)"
     echo "  -v, --virtual-users NUM   Set the number of virtual users (default: $VIRTUAL_USERS)"
     echo "  -db, --database DB        Set the database type (default: $DATABASE)"
-    echo "  -dbc, --db-cores CORES    Set the database cores (default: $DB_CORES)"
-    echo "  -s, --scripts-dir DIR     Set the scripts directory (default: $SCRIPTS_DIR)"
+    echo "  -dbc, --db-cores CORES    Set the database cores in taskset format (default: $DB_CORES)"
+    echo "  -o, --output-dir DIR      Set the output directory for scripts and logs (default: $OUTPUT_DIR)"
     echo "  -r, --rampup-dur NUM      Set the rampup duration in minutes (default: $RAMPUP_DUR)"
     echo "  -b, --bench-duration NUM  Set the benchmark duration in minutes (default: $BENCH_DURATION)"
     echo "  -pgsp, --pg-superuser-password PASS Set the PostgreSQL superuser password (default: $PG_SUPERUSER_PASSWORD)"
     echo "  -pgsu, --pg-superuser USER Set the PostgreSQL superuser (default: $PG_SUPERUSER)"
     echo "  -i, --iterations NUM      Set the number of iterations (default: $ITERATIONS)"
-    echo "  -n, --numa-args ARGS      Set the NUMA arguments (default: $NUMA_ARGS)"
+    echo "  -n, --numa-args ARGS      Set the NUMA arguments for HammerDB Client (default: $NUMA_ARGS)"
+    echo "  --verbose                 Print all HammerDB output to console"
     echo "  -h, --help                 Display this help message"
     echo "Note: If an option is not provided, the default value will be used."
 }
@@ -158,10 +161,6 @@ while [[ $# -gt 0 ]]; do
             DATABASE="$2"
             shift 2
             ;;
-        -s | --scripts-dir)
-            SCRIPTS_DIR="$2"
-            shift 2
-            ;;
         -r | --rampup-dur)
             RAMPUP_DUR="$2"
             shift 2
@@ -198,6 +197,14 @@ while [[ $# -gt 0 ]]; do
             DB_CORES="$2"
             shift 2
             ;;
+        -o | --output-dir)
+            OUTPUT_DIR="$2"
+            shift 2
+            ;;
+        --verbose)
+            VERBOSE=true
+            shift 1
+            ;;
         *)
             echo "Invalid option: $1"
             print_help
@@ -217,7 +224,7 @@ validate_tasks "$TASKS"
 
 cd $HDB_DIR
 mkdir -p $SCRIPTS_DIR
-
+mkdir -p $LOG_DIR
 
 if [[ "$DATABASE" == "mysql" ]]; then
     # Execute the MySQL command to get the version and extract the necessary part
@@ -237,18 +244,20 @@ IFS=',' read -ra task_list <<< "$TASKS"
 for task in "${task_list[@]}"; do
     case "$task" in
         "fill")
-            echo "+++++++++++++++++++++++++++++++++++++++++++++"
+            echo -e "\n+++++++++++++++++++++++++++++++++++++++++++++"
             echo "Filling Database with $DATA_WAREHOUSES warehouses"
             echo -e "+++++++++++++++++++++++++++++++++++++++++++++\n"
             create_benchmark_file "$SCRIPTS_DIR/${DATABASE}_fill.tcl" "fill"
-            numactl $NUMA_ARGS ./hammerdbcli auto $SCRIPTS_DIR/${DATABASE}_fill.tcl
+            echo "Created HammerDB fill scripts at $SCRIPTS_DIR/${DATABASE}_fill.tcl"
+            numactl $NUMA_ARGS ./hammerdbcli auto $SCRIPTS_DIR/${DATABASE}_fill.tcl $([ "$VERBOSE_OPTION" = "true" ] && echo "| tee \"$LOG_DIR/${DATABASE}_fill.log\"") > "$LOG_DIR/${DATABASE}_fill.log"
             ;;
         "bench")
             echo -e "\n+++++++++++++++++++++++++++++++++++++++++++++"
             echo "Running Benchmark with $VIRTUAL_USERS virtual users"
             echo -e "+++++++++++++++++++++++++++++++++++++++++++++\n"
             create_benchmark_file "$SCRIPTS_DIR/${DATABASE}_bench.tcl" "bench"
-            numactl $NUMA_ARGS ./hammerdbcli auto $SCRIPTS_DIR/${DATABASE}_bench.tcl | tee "$SCRIPTS_DIR/${DATABASE}_bench.log"
+            echo "Created HammerDB bench scripts at $SCRIPTS_DIR/${DATABASE}_bench.tcl"
+            numactl $NUMA_ARGS ./hammerdbcli auto $SCRIPTS_DIR/${DATABASE}_bench.tcl $([ "$VERBOSE_OPTION" = "true" ] && echo "| tee \"$LOG_DIR/${DATABASE}_bench.log\"") > "$LOG_DIR/${DATABASE}_bench.log"
             ;;
         *)
             # This should never happen due to the task validation earlier.
@@ -265,10 +274,65 @@ echo -e "\n+++++++++++++++++++++++++++++++++++++++++++++"
 echo "Summarizing results"
 echo -e "+++++++++++++++++++++++++++++++++++++++++++++\n"
 
-echo -e "$(hostnamectl | grep "Operating System" | tr -s " ")"
-echo "Kernel Version: $(hostnamectl | grep "Kernel" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')"
-echo "CPU: $(lscpu | grep "Model name" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')"
-echo -e "$DB_TEXT Version: $DATABASE_VERSION\n"
+if [[ $NUMA_ARGS == *"-C "* ]]; then
+    # If NUMA_ARGS contains the "-C" option, extract the core-range
+    CORE_AFFINITY=$(echo "$NUMA_ARGS" | grep -oP "(?<=-C ).*")
+    HammerDB_CORE_OR_NODE="HammerDB Core Affinity: $CORE_AFFINITY"
+elif [[ $NUMA_ARGS == *"--cpunodebind="* && $NUMA_ARGS == *"--membind="* ]]; then
+    # If NUMA_ARGS contains both "--cpunodebind" and "--membind" options, extract the node-index
+    CPU_NODE_BIND=$(echo "$NUMA_ARGS" | grep -oP "(?<=--cpunodebind=)\d+")
+    MEM_BIND=$(echo "$NUMA_ARGS" | grep -oP "(?<=--membind=)\d+")
+    HammerDB_CORE_OR_NODE="HammerDB - CPU Node Bind: $CPU_NODE_BIND, Memory Node Bind: $MEM_BIND"
+else
+    # NUMA_ARGS has an unsupported format
+    HammerDB_CORE_OR_NODE="Unsupported NUMA_ARGS format: $NUMA_ARGS"
+fi
 
-echo "NOPM: $NOPM"
-echo "TPM: $TPM"
+cat <<EOF > "$OUTPUT_DIR/summary"
+
+--------------------------
+DATABASE
+--------------------------
+Database: ${DATABASE}
+DB Host: ${DB_HOST}
+DB Port: ${DB_PORT}
+DB User: ${DB_USER}
+DB Password: ${DB_PASSWORD}
+Database Core Affinity: ${DB_CORES}
+
+--------------------------
+HAMMER DB
+--------------------------
+HammerDB Path: ${HDB_DIR}
+HammerDB Client Core Affinity: ${HammerDB_CORE_OR_NODE}
+Data Warehouses: ${DATA_WAREHOUSES}
+Virtual Users: ${VIRTUAL_USERS}
+Rampup Duration: ${RAMPUP_DUR}
+Benchmark Duration: ${BENCH_DURATION}
+Iterations: ${ITERATIONS}
+
+--------------------------
+SYSTEM
+--------------------------
+$(hostnamectl | grep "Operating System" | tr -s " ")
+Kernel Version: $(hostnamectl | grep "Kernel" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')
+CPU: $(lscpu | grep "Model name" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')
+${DB_TEXT} Version: ${DATABASE_VERSION}
+
+--------------------------
+GENERATED FILES
+--------------------------
+Summary file: ${OUTPUT_DIR}/summary
+Scripts Directory: ${SCRIPTS_DIR}
+Logs Directory: ${LOG_DIR}
+
+--------------------------
+RESULTS
+--------------------------
+NOPM: ${NOPM}
+TPM: ${TPM}
+EOF
+
+if [ "$VERBOSE_OPTION" = "true" ]; then
+    cat "$OUTPUT_DIR/summary"
+fi
