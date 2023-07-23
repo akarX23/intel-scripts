@@ -75,7 +75,7 @@ validate_tasks() {
     done
 }
 
-create_benchmark_file() {
+create_script_file() {
     local benchmark_file="$1"
     local task="$2"
 
@@ -229,13 +229,11 @@ mkdir -p $SCRIPTS_DIR
 mkdir -p $LOG_DIR
 
 if [[ "$DATABASE" == "mysql" ]]; then
-    # Execute the MySQL command to get the version and extract the necessary part
     DATABASE_VERSION=$(mysql --version | awk '{print $3}' | cut -d '-' -f 1)
     DB_TEXT="MySQL"
     ln -s /run/mysqld/mysqld.sock /tmp/mysql.sock 2> /dev/null
     sudo taskset -apc $DB_CORES $(pgrep mysql | head -n 1)
 elif [[ "$DATABASE" == "pg" ]]; then
-    # Execute the PostgreSQL command to get the version and extract the necessary part
     DATABASE_VERSION=$(psql --version | awk '{print $3}')
     DB_TEXT="PostgreSQL"
     sudo taskset -apc $DB_CORES $(pgrep postgres | head -n 1)
@@ -249,7 +247,7 @@ for task in "${task_list[@]}"; do
             echo -e "\n+++++++++++++++++++++++++++++++++++++++++++++"
             echo "Filling Database with $DATA_WAREHOUSES warehouses"
             echo -e "+++++++++++++++++++++++++++++++++++++++++++++\n"
-            create_benchmark_file "$SCRIPTS_DIR/${DATABASE}_fill.tcl" "fill"
+            create_script_file "$SCRIPTS_DIR/${DATABASE}_fill.tcl" "fill"
             echo "Created HammerDB fill scripts at $SCRIPTS_DIR/${DATABASE}_fill.tcl"
             if [ "$VERBOSE" = "true" ]; then
                 # If --verbose option is provided, use tee for both stdout and log file
@@ -263,7 +261,7 @@ for task in "${task_list[@]}"; do
             echo -e "\n+++++++++++++++++++++++++++++++++++++++++++++"
             echo "Running Benchmark with $VIRTUAL_USERS virtual users"
             echo -e "+++++++++++++++++++++++++++++++++++++++++++++\n"
-            create_benchmark_file "$SCRIPTS_DIR/${DATABASE}_bench.tcl" "bench"
+            create_script_file "$SCRIPTS_DIR/${DATABASE}_bench.tcl" "bench"
             echo "Created HammerDB bench scripts at $SCRIPTS_DIR/${DATABASE}_bench.tcl"
             if [ "$VERBOSE" = "true" ]; then
                 # If --verbose option is provided, use tee for both stdout and log file
