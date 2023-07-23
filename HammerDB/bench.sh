@@ -224,12 +224,12 @@ if [[ "$DATABASE" == "mysql" ]]; then
     DATABASE_VERSION=$(mysql --version | awk '{print $3}' | cut -d '-' -f 1)
     DB_TEXT="MySQL"
     ln -s /run/mysqld/mysqld.sock /tmp/mysql.sock 2> /dev/null
-    sudo taskset -apc $DB_CORES $(pgrep mysql | tr '\n' ',')
+    sudo taskset -apc $DB_CORES $(pgrep mysql | head -n 1)
 elif [[ "$DATABASE" == "pg" ]]; then
     # Execute the PostgreSQL command to get the version and extract the necessary part
     DATABASE_VERSION=$(psql --version | awk '{print $3}')
     DB_TEXT="PostgreSQL"
-    sudo taskset -apc $DB_CORES $(pgrep postgres | tr '\n' ',')
+    sudo taskset -apc $DB_CORES $(pgrep postgres | head -n 1)
 fi
 
 # Loop over the tasks
