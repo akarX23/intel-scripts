@@ -15,3 +15,5 @@ nginx/logs/
 nginx/1
 nginx/logs-history
 nginx/*.csv
+
+system/nebset
