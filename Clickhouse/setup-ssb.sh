@@ -64,7 +64,7 @@ if [ $ONLY_GEN_DATA -eq 0 ]; then
 fi
 
 cd $SSB_DIR
-DB_GEN_COMMAND="${SSB_DIR}}/dbgen -s $SIZE_FACTOR"
+DB_GEN_COMMAND="${SSB_DIR}/dbgen -s $SIZE_FACTOR"
 pprint "Generating data with command: $DB_GEN_COMMAND"
 pprint "Generating customer data: $SSB_DIR/customer.tbl"
 eval $DB_GEN_COMMAND -T c
