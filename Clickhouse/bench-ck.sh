@@ -80,7 +80,6 @@ done
 
 CURRENT_DIR="$(pwd)/"
 ckport=("9000" "9001" "9002" "9003")
-CLIENT_SCRIPTS_DIR="${WORKING_DIR}/"
 OUTPUT_DIR="${WORKING_DIR}/output"
 LOG_DIR="${OUTPUT_DIR}/log"
 RAWDATA_DIR="${WORKING_DIR}/rawdata_dir"
@@ -373,7 +372,7 @@ function check_table(){
     source_tables="customer part supplier lineorder lineorder_flat"
     test_tables=${1:-${source_tables}}
     echo "Checking table data required in server..."
-    for i in $(seq 0 $[inst_num-1])
+    for i in $(seq 0 $[INSTANCES-1])
     do
             for j in `echo ${test_tables}`
             do
@@ -383,7 +382,7 @@ function check_table(){
             done
     done
 
-    for i in $(seq 0 $[inst_num-1])
+    for i in $(seq 0 $[INSTANCES-1])
     do
             echo "clickhouse client --host ${ckhost} --port ${ckport[i]} -m -q\"select count() from ${TABLE_NAME};\""
             var=$(clickhouse client --host ${ckhost} --port ${ckport[i]} -m -q"select count() from ${TABLE_NAME};")
@@ -423,7 +422,7 @@ function check_instance(){
 
 function start_clickhouse_for_insertion(){
     echo "start_clickhouse_for_insertion"
-    for i in $(seq 0 $[inst_num-1])
+    for i in $(seq 0 $[INSTANCES-1])
     do                
         echo "cd ${database_dir}/$1${dir_server[i]}"
         echo "${SERVER_BIND_CMD[i]} clickhouse server -C config_${1}${dir_server[i]}.xml >&${LOG_DIR}/${1}_${i}_server_log& > /dev/null"
@@ -436,7 +435,7 @@ function start_clickhouse_for_insertion(){
 
 function start_clickhouse_for_stressing(){
         echo "start_clickhouse_for_stressing"
-    for i in $(seq 0 $[inst_num-1])
+    for i in $(seq 0 $[INSTANCES-1])
     do
         echo "cd ${database_dir}/$1${dir_server[i]}"
         echo "${SERVER_BIND_CMD[i]} clickhouse server -C config_${1}${dir_server[i]}.xml >&/dev/null&"
@@ -453,7 +452,7 @@ function kill_instance(){
     do
         pkill clickhouse && sleep 5
             instance_alive=0        
-            for i in $(seq 0 $[inst_num-1])
+            for i in $(seq 0 $[INSTANCES-1])
             do
                     netstat -nltp | grep ${ckport[i]} > /dev/null
                     if [ $? -ne 1 ];then
@@ -475,17 +474,17 @@ function kill_instance(){
 
 function run_test(){
     is_xml=0
-    for i in $(seq 0 $[inst_num-1])
+    for i in $(seq 0 $[INSTANCES-1])
     do
         if [ -f ${database_dir}/${1}${dir_server[i]}/config_${1}${dir_server[i]}.xml ]; then
                 is_xml=$[is_xml+1]
         fi
     done
-    if [ $is_xml -eq $inst_num ];then
-        echo "Benchmark with $inst_num instance"
+    if [ $is_xml -eq $INSTANCES ];then
+        echo "Benchmark with $INSTANCES instance"
         start_clickhouse_for_insertion ${1}
 
-        for i in $(seq 0 $[inst_num-1])
+        for i in $(seq 0 $[INSTANCES-1])
         do
                 clickhouse client --host ${ckhost} --port ${ckport[i]} -m -q"show databases;" >/dev/null
         done
@@ -506,14 +505,14 @@ function run_test(){
         echo "Check table data required in server_${1} -> Done! "
         
         start_clickhouse_for_stressing ${1}
-        for i in $(seq 0 $[inst_num-1])
+        for i in $(seq 0 $[INSTANCES-1])
         do
             clickhouse client --host ${ckhost} --port ${ckport[i]} -m -q"show databases;" >/dev/null
         done
         if [ $? -eq 0 ];then
             echo "Client stressing... "
-            echo "${CLIENT_BIND_CMD} python3 ${CURRENT_DIR}/client_stressing_test.py ${QUERY_FILE} $inst_num ${STRESS_DURATION} &> ${LOG_DIR}/${1}.log"
-            ${CLIENT_BIND_CMD} python3 ${CURRENT_DIR}/client_stressing_test.py ${QUERY_FILE} $inst_num ${STRESS_DURATION} &> ${LOG_DIR}/${1}.log
+            echo "${CLIENT_BIND_CMD} python3 ${CURRENT_DIR}/client_stressing_test.py ${QUERY_FILE} $INSTANCES ${STRESS_DURATION} &> ${LOG_DIR}/${1}.log"
+            ${CLIENT_BIND_CMD} python3 ${CURRENT_DIR}/client_stressing_test.py ${QUERY_FILE} $INSTANCES ${STRESS_DURATION} &> ${LOG_DIR}/${1}.log
             echo "Completed client stressing, checking log... "
             finish_log=`grep "Finished" ${LOG_DIR}/${1}.log | wc -l`
             if [ $finish_log -eq 1 ] ;then
