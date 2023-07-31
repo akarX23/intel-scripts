@@ -46,7 +46,7 @@ fi
 # Function to parse the log file and calculate metrics
 parse_log_file() {
     local codec="$1"
-    local log_file="$PARENT_LOG_DIR/$codec/${codec}.log"
+    local log_file="$PARENT_LOG_DIR/$codec/log/${codec}.log"
 
     # Initialize variables to store metrics
     totalT_sum=0
