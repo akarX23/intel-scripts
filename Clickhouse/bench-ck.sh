@@ -1,17 +1,82 @@
 #!/bin/bash
 
+# Default values for variables
 WORKING_DIR="$(pwd)/"
 ckhost="localhost"
 QUERY_FILE="$(pwd)/queries_ssb.sql"
-SERVER_BIND_CMD[0]="numactl -C 0-7"
-SERVER_BIND_CMD[1]="numactl -C 8-15"
-SERVER_BIND_CMD[2]="numactl -C 16-23"
-SERVER_BIND_CMD[3]="numactl -C 24-31"
+SERVER_BIND_CMD=("numactl -C 0-7" "numactl -C 8-15" "numactl -C 16-23" "numactl -C 24-31")
 CLIENT_BIND_CMD="numactl -C 56-111"
 CODEC_CONFIG="lz4 deflate zstd"
 INSTANCES=2
 CLICKHOUSE_BINARY="$(which clickhouse)"
 STRESS_DURATION=30
+
+# Function to display help
+show_help() {
+    echo "Available options:"
+    echo "  -d, --working-dir           Set the working directory. Default: $WORKING_DIR"
+    echo "  -h, --ckhost                Set the ClickHouse host. Default: $ckhost"
+    echo "  -q, --query-file            Set the path to the query file. Default: $QUERY_FILE"
+    echo "  -sb, --server-bind-cmd       Set server bind commands as comma-separated values."
+    echo "                              Default: ${SERVER_BIND_CMD[*]}"
+    echo "  -cb, --client-bind-cmd       Set client bind command. Default: $CLIENT_BIND_CMD"
+    echo "  --codecs                    Set the codec configuration. Default: $CODEC_CONFIG"
+    echo "  -i, --instances             Set the number of instances. Default: $INSTANCES"
+    echo "  --clickhouse-bin            Set the path to the ClickHouse binary. Default: $CLICKHOUSE_BINARY"
+    echo "  -t, --stress-duration       Set the stress test duration in seconds. Default: $STRESS_DURATION"
+    echo "  -h, --help                  Display this help message."
+}
+
+# Process command-line arguments
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -d|--working-dir)
+            WORKING_DIR="$2"
+            shift 2
+            ;;
+        -h|--ckhost)
+            ckhost="$2"
+            shift 2
+            ;;
+        -q|--query-file)
+            QUERY_FILE="$2"
+            shift 2
+            ;;
+        -sb|--server-bind-cmd)
+            IFS=',' read -r -a SERVER_BIND_CMD <<< "$2"
+            shift 2
+            ;;
+        -cb|--client-bind-cmd)
+            CLIENT_BIND_CMD="$2"
+            shift 2
+            ;;
+        --codecs)
+                    CODEC_CONFIG="$2"
+            shift 2
+            ;;
+        -i|--instances)
+            INSTANCES="$2"
+            shift 2
+            ;;
+        --clickhouse-bin)
+            CLICKHOUSE_BINARY="$2"
+            shift 2
+            ;;
+        -t|--stress-duration)
+            STRESS_DURATION="$2"
+            shift 2
+            ;;
+        --help)
+            show_help
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            show_help
+            exit 1
+            ;;
+    esac
+done
 
 CURRENT_DIR="$(pwd)/"
 ckport=("9000" "9001" "9002" "9003")
@@ -23,23 +88,33 @@ database_dir="${WORKING_DIR}/database_dir"
 TALBE_ROWS="119994608"
 LOG_PACK_FILE="$(date +%Y-%m-%d-%H:%M:%S)"
 TABLE_NAME="lineorder_flat"
-CURRENT_DIR=$(pwd)
 
-# define instance number
+if [ ! -e "$QUERY_FILE" ]; then
+    echo "Query file not found!"
+    exit 1
+fi
+if [ ! -e "$CLICKHOUSE_BINARY" ]; then
+    echo "Please build clickhouse binary first!"
+    exit 1
+fi
 if [ ! -n "$INSTANCES" ]; then
     echo "Please clarify instance number from 1,2,3 or 4"
     exit 1
 else
-    echo "Benchmarking with instance number:$1"
+    echo "Benchmarking with instance number:$INSTANCES"
 fi
-if [ ! -f "$QUERY_FILE"]; then
-    echo "Query file not found!"
-    exit 1
-fi
-if [ ! -f "$CLICKHOUSE_BINARY"]; then
-    echo "Please build clickhouse binary first!"
-    exit 1
-fi
+
+echo "Final values of the variables:"
+echo "WORKING_DIR: $WORKING_DIR"
+echo "ckhost: $ckhost"
+echo "QUERY_FILE: $QUERY_FILE"
+echo "SERVER_BIND_CMD: ${SERVER_BIND_CMD[*]}"
+echo "CLIENT_BIND_CMD: $CLIENT_BIND_CMD"
+echo "CODEC_CONFIG: $CODEC_CONFIG"
+echo "INSTANCES: $INSTANCES"
+echo "CLICKHOUSE_BINARY: $CLICKHOUSE_BINARY"
+echo -e "STRESS_DURATION: $STRESS_DURATION\n"
+
 if [ ! -d "$OUTPUT_DIR" ]; then
     mkdir $OUTPUT_DIR
 fi
@@ -499,7 +574,7 @@ pip3 install clickhouse_driver numpy &> /dev/null
 filenum=`find ${RAWDATA_DIR}/ -name "*.tbl" | wc -l`
 
 if [ $filenum -ne 5 ];then
-        echo "generate ssb data file *.tbl faild"
+        echo "Not all *.tbl files found for SSB"
         exit 1
 fi
 
