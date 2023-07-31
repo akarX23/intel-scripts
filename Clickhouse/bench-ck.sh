@@ -10,6 +10,7 @@ CODEC_CONFIG="lz4 deflate zstd"
 INSTANCES=2
 CLICKHOUSE_BINARY="$(which clickhouse)"
 STRESS_DURATION=30
+LOG_FOLDER_PREFIX=""
 
 # Function to display help
 show_help() {
@@ -24,6 +25,7 @@ show_help() {
     echo "  -i, --instances             Set the number of instances. Default: $INSTANCES"
     echo "  --clickhouse-bin            Set the path to the ClickHouse binary. Default: $CLICKHOUSE_BINARY"
     echo "  -t, --stress-duration       Set the stress test duration in seconds. Default: $STRESS_DURATION"
+    echo "  -lp, --log-folder-prefix    Set the log folder prefix name. Final format - {PREFIX}-date. Default: $LOG_FOLDER_PREFIX"
     echo "  -h, --help                  Display this help message."
 }
 
@@ -66,6 +68,10 @@ while [[ $# -gt 0 ]]; do
             STRESS_DURATION="$2"
             shift 2
             ;;
+        -lp|--log-folder-prefix)
+            LOG_FOLDER_PREFIX="$2"
+            shift 2
+            ;;
         --help)
             show_help
             exit 0
@@ -85,7 +91,7 @@ LOG_DIR="${OUTPUT_DIR}/log"
 RAWDATA_DIR="${WORKING_DIR}/rawdata_dir"
 database_dir="${WORKING_DIR}/database_dir"
 TALBE_ROWS="119994608"
-LOG_PACK_FILE="$(date +%Y-%m-%d-%H:%M:%S)"
+LOG_PACK_FILE="$LOG_FOLDER_PREFIX-$(date +%Y-%m-%d-%H:%M:%S)"
 TABLE_NAME="lineorder_flat"
 
 if [ ! -e "$QUERY_FILE" ]; then
