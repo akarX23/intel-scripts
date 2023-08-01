@@ -1,4 +1,3 @@
-
 # IAA Setup 
 This guide has all the required steps to setup IAA devices on your system if it supports this functionality. It is assumed you have already finished setting up required BIOS comfiguration.
 
@@ -24,5 +23,5 @@ There can be multiple IAA devices present on your system, to configure all IAA d
 
 To verify if devices have been configured, run:
 ```
-accle-config list
+accel-config list
 ```
