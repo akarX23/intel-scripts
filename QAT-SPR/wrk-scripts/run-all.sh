@@ -10,6 +10,7 @@ nginx_qat_conf_path="/home/akarx/QAT-installs/NGINX/conf/qat.conf"
 nginx_wqat_cong_path="/home/akarx/QAT-installs/NGINX/conf/wqat.conf"
 threads=28
 connections=2000
+workloads="100KB,256KB,750KB,1MB"
 
 function display_usage() {
   echo "Usage: $0 [options]"
@@ -21,6 +22,7 @@ function display_usage() {
   echo "  --nginx-wqat-conf-path <path> Set the NGINX WQAT configuration path (default: $nginx_wqat_conf_path)"
   echo "  --threads <num>          Set the number of threads (default: $threads)"
   echo "  --connections <num>      Set the number of connections (default: $connections)"
+  echo "  --workloads <comma separated list> Set the workloads to run (default: $workloads)"
   echo "  -h, --help               Display this help message"
 }
 
@@ -28,6 +30,11 @@ function display_usage() {
 while [[ $# -gt 0 ]]; do
   key="$1"
   case $key in
+    --workloads)
+      workloads="$2"
+      shift # past argument
+      shift # past value
+      ;;
     --server)
       server="$2"
       shift # past argument
@@ -82,30 +89,16 @@ if [ -z "$server" ]; then
 fi
 
 run_workloads () {
-  echo "---------------------------------------------"
-  echo "Running wrk with 100KB size"
-  echo "---------------------------------------------"
-  numactl -C 56-111 ./run-wrk.sh --server $server --size 100KB --duration $duration --threads $threads --connections $connections $1
-  echo
-
-  echo "---------------------------------------------"
-  echo "Running wrk with 256KB size"
-  echo "---------------------------------------------"
-  numactl -C 56-111 ./run-wrk.sh --server $server --size 256KB --duration $duration --threads $threads --connections $connections $1
-  echo
-
-  echo "---------------------------------------------"
-  echo "Running wrk with 750KB size"
-  echo "---------------------------------------------"
-  numactl -C 56-111 ./run-wrk.sh --server $server --size 750KB --duration $duration --threads $threads --connections $connections $1
-  echo
-
-
-  echo "---------------------------------------------"
-  echo "Running wrk with 1MB size"
-  echo "---------------------------------------------"
-  numactl -C 56-111 ./run-wrk.sh --server $server --size 1MB --duration $duration --threads $threads --connections $connections $1
-  echo
+  local sizes="$1"
+  IFS=',' read -ra size_array <<< "$sizes"
+  
+  for size in "${size_array[@]}"; do
+    echo "---------------------------------------------"
+    echo "Running wrk with $size size"
+    echo "---------------------------------------------"
+    numactl -C 56-111 ./run-wrk.sh --server $server --size $size --duration $duration --threads $threads --connections $connections $2
+    echo
+  done
 }
 
 flush_cache() {
@@ -134,7 +127,7 @@ sleep 3
 mkdir -p logs
 # sar  -n DEV $(($(( $duration )) * 4)) 1 > logs/qat_sar.log &
 
-run_workloads --with-qat
+run_workloads "$workloads" --with-qat
 # cat /sys/kernel/debug/qat_4xxx_0000:6b:00.0/fw_counters
 
 wait
@@ -154,7 +147,7 @@ sleep 3
 
 # sar  -n DEV $(($(( $duration )) * 4)) 1 > logs/sar.log &
 
-run_workloads
+run_workloads "$workloads"
 
 wait
 
