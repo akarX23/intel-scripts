@@ -68,7 +68,7 @@ prompt_time=$(cat $log_dir/cur.run | grep "prompt eval time" | awk '{print $6}')
 prompt_tokens=$(cat $log_dir/cur.run | grep "prompt eval time" | awk '{print $9}')
 load_time=$(cat $log_dir/cur.run | grep "load time" | awk '{print $5}')
 quant=$(cat $log_dir/cur.run | grep "ftype" | grep  -o '[0-9]*' | tail -1)
-tps=$(echo "scale=2;$prompt_tokens / ($prompt_time / 1000)" | bc)
+tps=$(cat $log_dir/cur.run | grep "prompt eval time" | awk '{print $16}')
 
 rm $log_dir/cur.run
 
