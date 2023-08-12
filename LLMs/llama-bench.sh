@@ -58,7 +58,7 @@ fi
 # Execute the benchmark script
 command="numactl -C ${numactl_cores} ${llama_cpp_path} -m ${model_path} -n ${num_tokens} -t ${threads} ${gqa_flag} --ctx-size ${context_size} --batch-size ${batch_size}"
 echo "Executing: ${command}"
-result=$(eval ${command})
+result=$(eval ${command} &>)
 
 echo "Result: " $result
 size=$(echo $result | grep "model size" | awk '{print $5}')
