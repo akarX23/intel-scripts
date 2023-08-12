@@ -55,27 +55,30 @@ if $use_gqa; then
     gqa_flag="-gqa 8"
 fi
 
+mkdir -p $log_dir
+
 # Execute the benchmark script
 command="numactl -C ${numactl_cores} ${llama_cpp_path} -m ${model_path} -n ${num_tokens} -t ${threads} ${gqa_flag} --ctx-size ${context_size} --batch-size ${batch_size}"
 echo "Executing: ${command}"
-result=$(eval ${command} &>)
+eval ${command} 2>&1 | tee $log_dir/cur.run
 
-echo "Result: " $result
-size=$(echo $result | grep "model size" | awk '{print $5}')
-ctx_size=$(echo $result | grep "n_ctx" | head -n 1 | awk '{print $4}')
-prompt_time=$(echo $result | grep "prompt eval time" | awk '{print $6}')
-prompt_tokens=$(echo $result | grep "prompt eval time" | awk '{print $9}')
-load_time=$(echo $result | grep "load time" | awk '{print $5}')
+size=$(cat $log_dir/cur.run | grep "model size" | awk '{print $5}')
+ctx_size=$(cat $log_dir/cur.run | grep "n_ctx" | head -n 1 | awk '{print $4}')
+prompt_time=$(cat $log_dir/cur.run | grep "prompt eval time" | awk '{print $6}')
+prompt_tokens=$(cat $log_dir/cur.run | grep "prompt eval time" | awk '{print $9}')
+load_time=$(cat $log_dir/cur.run | grep "load time" | awk '{print $5}')
+quant=$(cat $log_dir/cur.run | grep "ftype" | grep  -o '[0-9]*' | tail -1)
 tps=$(echo "scale=2;$prompt_tokens / ($prompt_time / 1000)" | bc)
-quant=$(echo $result | grep "ftype" | grep  -o '[0-9]*' | tail -1)
 
-mkdir -p $log_dir
+rm $log_dir/cur.run
+
 # Store the timings in a log file
 log_file="$log_dir/${size}-$(date +%Y-%m-%d-%H:%M:%S).log"
 echo "load_time: ${load_time} ms" >> ${log_file}
 echo "numa_cores: ${numactl_cores}" >> ${log_file}
 echo "Context size: ${ctx_size}" >> ${log_file}
-echo "Prompt Time: ${prompt_time}" >> ${log_file}
+echo "Prompt Time: ${prompt_time} ms" >> ${log_file}
 echo "Prompt Tokens: ${prompt_tokens}" >> ${log_file}
 echo "Tokens per second: ${tps}" >> ${log_file}
 echo "Quantization: ${quant}" >> ${log_file}
+echo "Model Size: ${size}" >> ${log_file}
