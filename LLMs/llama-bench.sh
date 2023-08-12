@@ -11,6 +11,7 @@ show_help() {
     echo "  -th, --threads           Number of threads"
     echo "  -l, --log-dir            Log directory"
     echo "  -g, --use-gqa            Use GQA flag (optional)"
+    echo "  -llp, --llama-path       Llama CPP main path"
     exit 1
 }
 
@@ -55,10 +56,11 @@ if $use_gqa; then
 fi
 
 # Execute the benchmark script
-command="numactl -C ${numactl_cores} /home/akarx/llama.cpp/main -m ${model_path} -n ${num_tokens} -t ${threads} ${gqa_flag} --ctx-size ${context_size} --batch-size ${batch_size}"
+command="numactl -C ${numactl_cores} ${llama_cpp_path} -m ${model_path} -n ${num_tokens} -t ${threads} ${gqa_flag} --ctx-size ${context_size} --batch-size ${batch_size}"
 echo "Executing: ${command}"
 result=$(eval ${command})
 
+echo "Result: " $result
 size=$(echo $result | grep "model size" | awk '{print $5}')
 ctx_size=$(echo $result | grep "n_ctx" | head -n 1 | awk '{print $4}')
 prompt_time=$(echo $result | grep "prompt eval time" | awk '{print $6}')
@@ -67,6 +69,7 @@ load_time=$(echo $result | grep "load time" | awk '{print $5}')
 tps=$(echo "scale=2;$prompt_tokens / ($prompt_time / 1000)" | bc)
 quant=$(echo $result | grep "ftype" | grep  -o '[0-9]*' | tail -1)
 
+mkdir -p $log_dir
 # Store the timings in a log file
 log_file="$log_dir/${size}-$(date +%Y-%m-%d-%H:%M:%S).log"
 echo "load_time: ${load_time} ms" >> ${log_file}
