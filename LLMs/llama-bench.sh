@@ -23,6 +23,7 @@ batch_size="1024"
 threads="28"
 log_dir="$(pwd)/logs"
 use_gqa=false
+llama_cpp_path="/home/akarx/llama.cpp/main"
 
 # Parse input arguments
 while [[ $# -gt 0 ]]; do
@@ -35,6 +36,7 @@ while [[ $# -gt 0 ]]; do
         -th|--threads) threads="$2"; shift 2;;
         -l|--log-dir) log_dir="$2"; shift 2;;
         -g|--use-gqa) use_gqa=true; shift;;
+        -llp|--llama-path) llama_cpp_path="$2"; shift 2;;
         -h|--help) show_help;;
         *) echo "Unknown option: $1"; show_help;;
     esac
