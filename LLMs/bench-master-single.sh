@@ -18,7 +18,7 @@ numactl_cores="0-55 112-167"
 context_sizes="1000"
 num_tokens="1024"
 batch_size="1000"
-threads_array="28 28"
+threads="28 28"
 models_directory=""
 log_directory="$(pwd)/"
 
@@ -28,7 +28,7 @@ while [[ $# -gt 0 ]]; do
         -c|--numactl-cores) numactl_cores="$2"; shift 2;;
         -s|--context-sizes) context_sizes="$2"; shift 2;;
         -t|--num-tokens) num_tokens="$2"; shift 2;;
-        -th|--threads) threads_array="$2"; shift 2;;
+        -th|--threads) threads="$2"; shift 2;;
         -m|--models-directory) models_directory="$2"; shift 2;;
         -b|--batch-size) batch_size="$2"; shift 2;;
         -l|--log-dir) log_directory="$2"; shift 2;;
@@ -36,12 +36,6 @@ while [[ $# -gt 0 ]]; do
         *) echo "Unknown option: $1"; show_help;;
     esac
 done
-
-# Check if the number of cores is equal to the number of threads
-if [ ${#numactl_cores_array} -ne ${#threads_array} ]; then
-  echo "The number of threads must be equal to the number of cores."
-  exit 1
-fi
 
 # Check for mandatory arguments
 if [[ -z "$models_directory" ]]; then
@@ -54,7 +48,13 @@ models=$(ls ${models_directory})
 # Convert space-separated strings to arrays
 IFS=' ' read -ra cores_array <<< "$numactl_cores"
 IFS=' ' read -ra sizes_array <<< "$context_sizes"
-IFS=' ' read -ra threads_array <<< "$threads_array"
+IFS=' ' read -ra threads_array <<< "$threads"
+
+# Check if the number of cores is equal to the number of threads
+if [ ${#cores_array} -ne ${#threads_array} ]; then
+  echo "The number of threads must be equal to the number of cores."
+  exit 1
+fi
 
 log_directory=$log_directory/$(date +%Y-%m-%d-%H:%M:%S)
 mkdir -p $log_directory

@@ -58,7 +58,7 @@ fi
 mkdir -p $log_dir
 
 pprint() {
-    echo "------>" $1
+    echo -e "\n------>" $1
 }
 
 pprint "Flushing system cache"
@@ -91,4 +91,4 @@ echo "Quantization: ${quant}" >> ${log_file}
 echo "Model Size: ${size}" >> ${log_file}
 echo "Threads: ${threads}" >> ${threads}
 
-pprint "Log saved in $log_file."
+pprint "Metrics saved in $log_file."
