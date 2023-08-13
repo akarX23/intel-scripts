@@ -39,7 +39,7 @@ for log_file in "$log_dir"/*.log; do
         prompt_tokens=$(grep "Prompt Tokens" "$log_file" | awk '{print $3}')
         tps=$(grep "Tokens per second" "$log_file" | awk '{print $4}')
 
-        printf "| %10s | %15s | %15s | %10s | %20s | %15s | %20s | %20s | %10s |\n" "$model_size" "$quantization" "$cores" "$threads" "$load_time ms" "$ctx_size" "$prompt_time ms" "$prompt_tokens" "$tps"
+        printf "| %10s | %15s | %15s | %10s | %20s | %15s | %20s | %20s | %10s |\n" "$model_size" "$quantization bit" "$cores" "$threads" "$load_time ms" "$ctx_size" "$prompt_time ms" "$prompt_tokens" "$tps"
     fi
 done
 
