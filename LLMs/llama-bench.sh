@@ -71,10 +71,10 @@ sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches'
 command="numactl -C ${numactl_cores} ${llama_cpp_path} -m ${model_path} -n ${num_tokens} -t ${threads} ${gqa_flag} --ctx-size ${context_size} --batch-size ${batch_size}"
 pprint "Executing: ${command}"
 
-if [ "$verbose" = "true" ]; then
+if $verbose; then
     eval "${command}" 2>&1 | tee "$log_dir/cur.run"
 else
-    eval "${command}" 2>&1 > "$log_dir/cur.run"
+    eval "${command}" &> "$log_dir/cur.run"
 fi
 
 size=$(cat $log_dir/cur.run | grep "model size" | awk '{print $5}')
