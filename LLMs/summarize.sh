@@ -20,7 +20,7 @@ table_width=150
 
 # Print table header
 repeat $table_width "-"; echo
-printf "| %10s | %10s | %20s | %10s | %20s | %10s | %10s | %10s | %10s |\n" "Model Size" "Quantization" "Cores Used" "Threads" "Load Time" "Context Size" "Prompt Time" "Prompt Tokens" "TPS"
+printf "| %10s | %15s | %15s | %10s | %20s | %10s | %20s | %10s | %10s |\n" "Model Size" "Quantization" "Cores Used" "Threads" "Load Time" "Context Size" "Prompt Time" "Prompt Tokens" "TPS"
 repeat $table_width "-"; echo
 
 for log_file in "$log_dir"/*.log; do
@@ -35,6 +35,6 @@ for log_file in "$log_dir"/*.log; do
         prompt_tokens=$(grep "Prompt Tokens" "$log_file" | awk '{print $3}')
         tps=$(grep "Tokens per second" "$log_file" | awk '{print $4}')
 
-        printf "| %10s | %10s | %20s | %10s | %20s | %10s | %10s | %10s | %10s |\n" "$model_size" "$quantization" "$cores" "$threads" "$load_time ms" "$ctx_size" "$prompt_time ms" "$prompt_tokens" "$tps"
+        printf "| %10s | %15s | %15s | %10s | %20s | %10s | %20s | %10s | %10s |\n" "$model_size" "$quantization" "$cores" "$threads" "$load_time ms" "$ctx_size" "$prompt_time ms" "$prompt_tokens" "$tps"
     fi
 done
