@@ -10,7 +10,12 @@ show_help() {
     echo "  -b, --batch-size         Batch Size"
     echo "  -m, --models-directory   Path to models directory"
     echo "  -l, --log-dir            Log Directory"
+    echo "  -lp, --log-prefix        Prefix to add to log directory created"
     exit 1
+}
+
+pprint() {
+    echo -e "\n----->" $1
 }
 
 # Default values
@@ -21,6 +26,7 @@ batch_size="1000"
 threads="28 28"
 models_directory=""
 log_directory="$(pwd)/"
+log_prefix=""
 
 # Parse input arguments
 while [[ $# -gt 0 ]]; do
@@ -32,6 +38,7 @@ while [[ $# -gt 0 ]]; do
         -m|--models-directory) models_directory="$2"; shift 2;;
         -b|--batch-size) batch_size="$2"; shift 2;;
         -l|--log-dir) log_directory="$2"; shift 2;;
+        -lp|--log-prefix) log_prefix="$2"; shift 2;;
         -h|--help) show_help;;
         *) echo "Unknown option: $1"; show_help;;
     esac
@@ -51,12 +58,12 @@ IFS=' ' read -ra sizes_array <<< "$context_sizes"
 IFS=' ' read -ra threads_array <<< "$threads"
 
 # Check if the number of cores is equal to the number of threads
-if [ ${#cores_array} -ne ${#threads_array} ]; then
+if [ ${#cores_array[@]} -ne ${#threads_array[@]} ]; then
   echo "The number of threads must be equal to the number of cores."
   exit 1
 fi
 
-log_directory=$log_directory/$(date +%Y-%m-%d-%H:%M:%S)
+log_directory=$log_directory/$log_prefix-$(date +%Y-%m-%d-%H:%M:%S)
 mkdir -p $log_directory
 
 # Loop through combinations
@@ -66,22 +73,26 @@ for model in ${models[@]}; do
     for cores in "${cores_array[@]}"; do
         current_threads=${threads_array[$threads_counter]}
         for size in "${sizes_array[@]}"; do
-            
+            printf -- '-%.0s' {1..$(tput cols)}
+
             if [[ $model =~ "70b" || $model =~ "70B" ]]; then
             gqa_flag="-g"
             else
             gqa_flag=""
             fi
 
-            echo "Running benchmark for model: $(basename "$models_directory/$model"), Cores: $cores, Context Size: $size, Threads: $current_threads"
+            pprint "Running benchmark for model: $(basename "$models_directory/$model"), Cores: $cores, Context Size: $size, Threads: $current_threads"
             
             # Call the benchmark script
             ./llama-bench.sh -m "${models_directory}/${model}" -n "$cores" -t "$num_tokens" -ct "$size" -b "$batch_size" -th "$current_threads" -l "$log_directory" ${gqa_flag}
             
-            echo "-------------------------"
+            printf -- '-%.0s' {1..$(tput cols)}
+
+            pprint "Sleep for 5 seconds for the next run"
+            sleep 5
         done
         ((threads_counter++))
     done
 done
 
-echo "All benchmarks completed."
+echo "All benchmarks completed. Logs can be found in $log_directory"

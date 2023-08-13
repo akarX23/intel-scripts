@@ -12,6 +12,7 @@ show_help() {
     echo "  -l, --log-dir            Log directory"
     echo "  -g, --use-gqa            Use GQA flag (optional)"
     echo "  -llp, --llama-path       Llama CPP main path"
+    echo "  -v, --verbose            Pass this flag to show llama.cpp output"
     exit 1
 }
 
@@ -25,6 +26,7 @@ threads="28"
 log_dir="$(pwd)/logs"
 use_gqa=false
 llama_cpp_path="/home/akarx/llama.cpp/main"
+verbose=false
 
 # Parse input arguments
 while [[ $# -gt 0 ]]; do
@@ -37,6 +39,7 @@ while [[ $# -gt 0 ]]; do
         -th|--threads) threads="$2"; shift 2;;
         -l|--log-dir) log_dir="$2"; shift 2;;
         -g|--use-gqa) use_gqa=true; shift;;
+        -v|--verbose) verbose=true; shift;;
         -llp|--llama-path) llama_cpp_path="$2"; shift 2;;
         -h|--help) show_help;;
         *) echo "Unknown option: $1"; show_help;;
@@ -67,7 +70,12 @@ sync; echo 3 > /proc/sys/vm/drop_caches
 # Execute the benchmark script
 command="numactl -C ${numactl_cores} ${llama_cpp_path} -m ${model_path} -n ${num_tokens} -t ${threads} ${gqa_flag} --ctx-size ${context_size} --batch-size ${batch_size}"
 pprint "Executing: ${command}"
-eval ${command} 2>&1 | tee $log_dir/cur.run
+
+if [ "$verbose" = "true" ]; then
+    eval "${command}" 2>&1 | tee "$log_dir/cur.run"
+else
+    eval "${command}" 2>&1 > "$log_dir/cur.run"
+fi
 
 size=$(cat $log_dir/cur.run | grep "model size" | awk '{print $5}')
 ctx_size=$(cat $log_dir/cur.run | grep "n_ctx" | head -n 1 | awk '{print $4}')
@@ -91,4 +99,4 @@ echo "Quantization: ${quant}" >> ${log_file}
 echo "Model Size: ${size}" >> ${log_file}
 echo "Threads: ${threads}" >> ${threads}
 
-pprint "Metrics saved in $log_file."
+pprint "Metrics saved in $log_file"
