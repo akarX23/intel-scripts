@@ -67,6 +67,9 @@ pprint() {
 pprint "Flushing system cache"
 sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches'
 
+pprint "Sleeping for 5 seconds..."
+sleep 5
+
 # Execute the benchmark script
 command="numactl -C ${numactl_cores} ${llama_cpp_path} -m ${model_path} -n ${num_tokens} -t ${threads} ${gqa_flag} --ctx-size ${context_size} --batch-size ${batch_size}"
 pprint "Executing: ${command}"

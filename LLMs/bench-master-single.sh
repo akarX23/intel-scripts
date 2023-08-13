@@ -94,9 +94,6 @@ for model in ${models[@]}; do
             
             # Call the benchmark script
             ./llama-bench.sh -m "${models_directory}/${model}" -n "$cores" -t "$num_tokens" -ct "$size" -b "$batch_size" -th "$current_threads" -l "$log_directory" ${gqa_flag}
-            
-            pprint "Sleep for 5 seconds for the next run"
-            sleep 5
         done
         ((threads_counter++))
     done
