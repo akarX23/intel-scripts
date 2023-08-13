@@ -100,6 +100,6 @@ echo "Prompt Tokens: ${prompt_tokens}" >> ${log_file}
 echo "Tokens per second: ${tps}" >> ${log_file}
 echo "Quantization: ${quant}" >> ${log_file}
 echo "Model Size: ${size}" >> ${log_file}
-echo "Threads: ${threads}" >> ${threads}
+echo "Threads: ${threads}" >> ${log_file}
 
 pprint "Metrics saved in $log_file"
