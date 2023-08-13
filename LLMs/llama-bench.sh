@@ -61,7 +61,7 @@ fi
 mkdir -p $log_dir
 
 pprint() {
-    echo -e "\n------>" $1
+    echo -e "\n----->" $1
 }
 
 pprint "Flushing system cache"
