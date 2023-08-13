@@ -99,4 +99,5 @@ for model in ${models[@]}; do
     done
 done
 
-echo "All benchmarks completed. Logs can be found in $log_directory"
+repeat $(tput cols) "="; echo
+echo -e "\nAll benchmarks completed. Logs can be found in $log_directory"
