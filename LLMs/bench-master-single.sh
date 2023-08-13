@@ -11,6 +11,7 @@ show_help() {
     echo "  -m, --models-directory   Path to models directory"
     echo "  -l, --log-dir            Log Directory"
     echo "  -lp, --log-prefix        Prefix to add to log directory created"
+    echo "  -v, --verbose            Pass this flag to show llama.cpp output"
     exit 1
 }
 
@@ -47,6 +48,7 @@ while [[ $# -gt 0 ]]; do
         -b|--batch-size) batch_size="$2"; shift 2;;
         -l|--log-dir) log_directory="$2"; shift 2;;
         -lp|--log-prefix) log_prefix="$2"; shift 2;;
+        -v|--verbose) verbose=true; shift;;
         -h|--help) show_help;;
         *) echo "Unknown option: $1"; show_help;;
     esac
@@ -57,6 +59,11 @@ if [[ -z "$models_directory" ]]; then
     echo "Missing model directory."
     show_help
 fi
+
+if $verbose; then
+    verbose_flag="-v"
+fi
+
 
 models=$(ls ${models_directory})
 
@@ -93,7 +100,7 @@ for model in ${models[@]}; do
             pprint "Running benchmark for model: $(basename "$models_directory/$model"), Cores: $cores, Context Size: $size, Threads: $current_threads"
             
             # Call the benchmark script
-            ./llama-bench.sh -m "${models_directory}/${model}" -n "$cores" -t "$num_tokens" -ct "$size" -b "$batch_size" -th "$current_threads" -l "$log_directory" ${gqa_flag}
+            ./llama-bench.sh -m "${models_directory}/${model}" -n "$cores" -t "$num_tokens" -ct "$size" -b "$batch_size" -th "$current_threads" -l "$log_directory" ${gqa_flag} ${verbose_flag}
         done
         ((threads_counter++))
     done
