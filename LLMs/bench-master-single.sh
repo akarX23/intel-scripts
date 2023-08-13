@@ -18,6 +18,14 @@ pprint() {
     echo -e "\n----->" $1
 }
 
+repeat(){
+	local start=1
+	local end=${1:-80}
+	local str="${2:-=}"
+	local range=$(seq $start $end)
+	for i in $range ; do echo -n "${str}"; done
+}
+
 # Default values
 numactl_cores="0-55 112-167"
 context_sizes="1000"
@@ -73,7 +81,7 @@ for model in ${models[@]}; do
     for cores in "${cores_array[@]}"; do
         current_threads=${threads_array[$threads_counter]}
         for size in "${sizes_array[@]}"; do
-            printf -- '-%.0s' {1..$(tput cols)}
+            repeat "=" $(tput cols); echo
 
             if [[ $model =~ "70b" || $model =~ "70B" ]]; then
             gqa_flag="-g"
@@ -86,7 +94,7 @@ for model in ${models[@]}; do
             # Call the benchmark script
             ./llama-bench.sh -m "${models_directory}/${model}" -n "$cores" -t "$num_tokens" -ct "$size" -b "$batch_size" -th "$current_threads" -l "$log_directory" ${gqa_flag}
             
-            printf -- '-%.0s' {1..$(tput cols)}
+            repeat "=" $(tput cols); echo
 
             pprint "Sleep for 5 seconds for the next run"
             sleep 5
