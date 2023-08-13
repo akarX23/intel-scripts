@@ -33,7 +33,7 @@ num_tokens="1024"
 batch_size="1000"
 threads="28 28"
 models_directory=""
-log_directory="$(pwd)/"
+log_directory="$(pwd)/logs"
 log_prefix=""
 
 # Parse input arguments
@@ -81,6 +81,7 @@ for model in ${models[@]}; do
     for cores in "${cores_array[@]}"; do
         current_threads=${threads_array[$threads_counter]}
         for size in "${sizes_array[@]}"; do
+            echo -e "\n"
             repeat $(tput cols) "="; echo
 
             if [[ $model =~ "70b" || $model =~ "70B" ]]; then
@@ -94,8 +95,6 @@ for model in ${models[@]}; do
             # Call the benchmark script
             ./llama-bench.sh -m "${models_directory}/${model}" -n "$cores" -t "$num_tokens" -ct "$size" -b "$batch_size" -th "$current_threads" -l "$log_directory" ${gqa_flag}
             
-            repeat $(tput cols) "="; echo
-
             pprint "Sleep for 5 seconds for the next run"
             sleep 5
         done

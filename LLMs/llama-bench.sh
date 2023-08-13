@@ -65,7 +65,7 @@ pprint() {
 }
 
 pprint "Flushing system cache"
-sync; echo 3 > /proc/sys/vm/drop_caches
+sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches'
 
 # Execute the benchmark script
 command="numactl -C ${numactl_cores} ${llama_cpp_path} -m ${model_path} -n ${num_tokens} -t ${threads} ${gqa_flag} --ctx-size ${context_size} --batch-size ${batch_size}"
