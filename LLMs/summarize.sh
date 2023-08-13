@@ -20,11 +20,11 @@ echo "Kernel Version: $(hostnamectl | grep "Kernel" | cut -d ":" -f 2 | sed -e '
 echo -e "CPU: $(lscpu | grep "Model name" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')\n"
 
 # Calculate the width of the table
-table_width=163
+table_width=175
 
 # Print table header
 repeat $table_width "-"; echo
-printf "| %10s | %15s | %15s | %10s | %20s | %15s | %20s | %20s | %10s |\n" "Model Size" "Quantization" "Cores Used" "Threads" "Load Time" "Context Size" "Prompt Time" "Prompt Tokens" "TPS"
+printf "| %10s | %15s | %15s | %10s | %15s | %20s | %15s | %20s | %20s | %10s |\n" "Model Size" "Quantization" "Cores Used" "Threads" "Tokens Gen" "Load Time" "Context Size" "Prompt Time" "Prompt Tokens" "TPS"
 repeat $table_width "-"; echo
 
 for log_file in "$log_dir"/*.log; do
@@ -38,8 +38,9 @@ for log_file in "$log_dir"/*.log; do
         prompt_time=$(grep "Prompt Time" "$log_file" | awk '{print $3}')
         prompt_tokens=$(grep "Prompt Tokens" "$log_file" | awk '{print $3}')
         tps=$(grep "Tokens per second" "$log_file" | awk '{print $4}')
+        tokens=$(grep "Tokens Generated" "$log_file" | awk '{print $3}')
 
-        printf "| %10s | %15s | %15s | %10s | %20s | %15s | %20s | %20s | %10s |\n" "$model_size" "$quantization bit" "$cores" "$threads" "$load_time ms" "$ctx_size" "$prompt_time ms" "$prompt_tokens" "$tps"
+        printf "| %10s | %15s | %15s | %10s | %15s | %20s | %15s | %20s | %20s | %10s |\n" "$model_size" "$quantization bit" "$cores" "$threads" "$tokens" "$load_time ms" "$ctx_size" "$prompt_time ms" "$prompt_tokens" "$tps"
     fi
 done
 

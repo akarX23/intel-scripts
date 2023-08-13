@@ -108,3 +108,8 @@ done
 
 repeat $(tput cols) "="; echo
 echo -e "\nAll benchmarks completed. Logs can be found in $log_directory"
+
+repeat $(tput cols) "="; echo
+echo "RESULTS SUMMARY"
+
+./summarize.sh $log_directory

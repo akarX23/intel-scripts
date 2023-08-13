@@ -101,5 +101,6 @@ echo "Tokens per second: ${tps}" >> ${log_file}
 echo "Quantization: ${quant}" >> ${log_file}
 echo "Model Size: ${size}" >> ${log_file}
 echo "Threads: ${threads}" >> ${log_file}
+echo "Tokens Generated: ${num_tokens}" >> ${log_file}
 
 pprint "Metrics saved in $log_file"
