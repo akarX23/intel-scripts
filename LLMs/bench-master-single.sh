@@ -81,7 +81,7 @@ for model in ${models[@]}; do
     for cores in "${cores_array[@]}"; do
         current_threads=${threads_array[$threads_counter]}
         for size in "${sizes_array[@]}"; do
-            repeat "=" $(tput cols); echo
+            repeat $(tput cols) "="; echo
 
             if [[ $model =~ "70b" || $model =~ "70B" ]]; then
             gqa_flag="-g"
@@ -94,7 +94,7 @@ for model in ${models[@]}; do
             # Call the benchmark script
             ./llama-bench.sh -m "${models_directory}/${model}" -n "$cores" -t "$num_tokens" -ct "$size" -b "$batch_size" -th "$current_threads" -l "$log_directory" ${gqa_flag}
             
-            repeat "=" $(tput cols); echo
+            repeat $(tput cols) "="; echo
 
             pprint "Sleep for 5 seconds for the next run"
             sleep 5
