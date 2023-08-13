@@ -15,8 +15,12 @@ if [ -z "$log_dir" ]; then
     exit 1
 fi
 
+echo -e "\n$(hostnamectl | grep "Operating System")"
+echo "Kernel Version: $(hostnamectl | grep "Kernel" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')"
+echo -e "CPU: $(lscpu | grep "Model name" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')\n"
+
 # Calculate the width of the table
-table_width=170
+table_width=163
 
 # Print table header
 repeat $table_width "-"; echo
