@@ -57,9 +57,16 @@ fi
 
 mkdir -p $log_dir
 
+pprint() {
+    echo "------>" $1
+}
+
+pprint "Flushing system cache"
+sync; echo 3 > /proc/sys/vm/drop_caches
+
 # Execute the benchmark script
 command="numactl -C ${numactl_cores} ${llama_cpp_path} -m ${model_path} -n ${num_tokens} -t ${threads} ${gqa_flag} --ctx-size ${context_size} --batch-size ${batch_size}"
-echo "Executing: ${command}"
+pprint "Executing: ${command}"
 eval ${command} 2>&1 | tee $log_dir/cur.run
 
 size=$(cat $log_dir/cur.run | grep "model size" | awk '{print $5}')
@@ -82,3 +89,6 @@ echo "Prompt Tokens: ${prompt_tokens}" >> ${log_file}
 echo "Tokens per second: ${tps}" >> ${log_file}
 echo "Quantization: ${quant}" >> ${log_file}
 echo "Model Size: ${size}" >> ${log_file}
+echo "Threads: ${threads}" >> ${threads}
+
+pprint "Log saved in $log_file."
