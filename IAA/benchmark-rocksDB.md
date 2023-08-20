@@ -7,7 +7,7 @@
 - Run benchmark (Read next sextion for more detailed usage):
 
 ```
-./rocksdb-bench-master.sh
+./rocksdb-bench-master.sh -m 2750000 -t 12 -du 30 -ta fill,bench
 ```
 
 ## Benchmark Scripts usage
