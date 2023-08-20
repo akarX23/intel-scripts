@@ -68,7 +68,7 @@ Perform the initial steps above and perform these steps:
 cd /home/benchmark/QAT-SPR/wrk-scripts
 
 # Run the script
-./run-all.sh --duration 5
+./run-all.sh --duration 5 --workloads 100KB,256KB,750KB,1MB
 ```
 
 You can change the `--duration` parameter according to requirement, the rest should be kept same.
