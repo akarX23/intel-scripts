@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PARENT_LOG_DIR=""
-CODECS=("lz4" "deflate" "zstd")
+CODECS=("deflate" "zstd")
 
 # Function to print help message
 print_help() {
