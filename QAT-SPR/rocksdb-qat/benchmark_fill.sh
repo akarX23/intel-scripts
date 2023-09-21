@@ -66,7 +66,7 @@ done
 
 if [ "$BENCH_TYPE" == "qat" ]; then
   COMPRESSION_TYPE="com.intel.qat_compressor_rocksdb"
-  COMPRESSION_OPTIONS="execution_path=hw;compression_mode=dynamic;level=0"
+  COMPRESSION_OPTIONS="polling_mode=busy"
 elif [ "$BENCH_TYPE" == "zstd" ]; then
   COMPRESSION_TYPE="zstd"
   COMPRESSION_OPTIONS=""
@@ -92,7 +92,6 @@ echo "PREPARE DATA"
     mkdir -p "$DATABASE_DIR/rocksdb_${BENCH_TYPE}_${i}"
     numactl $NUMA_ARGS "$ROCKSDB_DIR/db_bench" --benchmarks="fillseq" --db="$DATABASE_DIR/rocksdb_${BENCH_TYPE}_${i}" \
     --key_size=16 --value_size=32 --block_size=16384 --num="$MAX_OPS" --bloom_bits=10 --threads="$NUM_THREADS" --disable_wal \
-    --value_src_data_type=file_direct --value_src_data_file=standard_calgary_corpus \
     --compression_type="$COMPRESSION_TYPE" --compressor_options="$COMPRESSION_OPTIONS" \
     --cache_size=-1 --cache_index_and_filter_blocks=false --compressed_cache_size=-1 --row_cache_size=0 \
     --use_direct_reads=false --use_direct_io_for_flush_and_compaction=false \

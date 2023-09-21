@@ -31,7 +31,7 @@ conduct_test() {
         echo "---------------------------------------------"
 
         # Fill database
-        ./benchmark_fill.sh -n $NUM_IAA -d $DATABASE_DIR -r $ROCKSDB_DIR -m "$MAX_OPS" -t $NUM_THREADS -j $MAX_BG_JOBS -b $TEST -na "$NUMA_ARGS"
+        ./benchmark_fill.sh -d $DATABASE_DIR -r $ROCKSDB_DIR -m "$MAX_OPS" -t $NUM_THREADS -j $MAX_BG_JOBS -b $TEST -na "$NUMA_ARGS"
 
     elif [ "$TASK" == "bench" ]; then
 
@@ -40,7 +40,7 @@ conduct_test() {
         echo "---------------------------------------------"
 
         # Bench database
-        ./benchmark_rw.sh -n $NUM_IAA -d $DATABASE_DIR -r $ROCKSDB_DIR -m $MAX_OPS -t $NUM_THREADS -j $MAX_BG_JOBS -b $TEST -du $DURATION -na "$NUMA_ARGS" -rw $RW_PERCENT
+        ./benchmark_rw.sh -d $DATABASE_DIR -r $ROCKSDB_DIR -m $MAX_OPS -t $NUM_THREADS -j $MAX_BG_JOBS -b $TEST -du $DURATION -na "$NUMA_ARGS" -rw $RW_PERCENT
     
     fi
 }

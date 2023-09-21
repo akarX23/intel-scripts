@@ -101,7 +101,7 @@ done
 
 if [ "$BENCH_TYPE" == "qat" ]; then
   COMPRESSION_TYPE="com.intel.qat_compressor_rocksdb"
-  COMPRESSION_OPTIONS="execution_path=hw;compression_mode=dynamic;level=0"
+  COMPRESSION_OPTIONS="polling_mode=busy"
 elif [ "$BENCH_TYPE" == "zstd" ]; then
   COMPRESSION_TYPE="zstd"
   COMPRESSION_OPTIONS=""
