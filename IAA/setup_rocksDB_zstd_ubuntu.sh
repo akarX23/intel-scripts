@@ -7,6 +7,7 @@ else
 fi
 
 mkdir -p $WDIR
+CUR_DIR=$(pwd)
 cd $WDIR
 
 # Update packages
@@ -60,5 +61,6 @@ EXTRA_CXXFLAGS="-I./../qpl/include" EXTRA_LDFLAGS="-L./../qpl/lib" ROCKSDB_PLUGI
 cd ..
 
 # Setting up IAA users
+cd $CUR_DIR
 chmod +x configure_iaa_user.sh
 sudo ./configure_iaa_user.sh
