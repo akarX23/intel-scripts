@@ -55,12 +55,12 @@ for ((i = start_index; i < start_index + num_users; i++)); do
     echo "# Crypto - User instance #$i" >> "$output_file"
     echo "Cy${i}Name = UserCY${i}" >> "$output_file"
     echo "Cy${i}IsPolled = 1" >> "$output_file"
-    echo "Cy${i}CoreAffinity = $i" >> "$output_file"
+    echo -e "Cy${i}CoreAffinity = $i\n" >> "$output_file"
   elif [ "$user_type" == "dc" ]; then
     echo "# Crypto - User instance #$i" >> "$output_file"
     echo "Dc${i}Name = Dc${i}" >> "$output_file"
     echo "Dc${i}IsPolled = 1" >> "$output_file"
-    echo "Dc${i}CoreAffinity = $i" >> "$output_file"
+    echo -e "Dc${i}CoreAffinity = $i\n" >> "$output_file"
   else
     show_help
   fi
