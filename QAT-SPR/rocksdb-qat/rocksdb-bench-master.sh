@@ -14,6 +14,7 @@ display_help() {
     echo "  --rw-percent, -rw          Set the percentage of reads and writes (default: $RW_PERCENT)"
     echo "  --numa-args, -na           Set the numa arguments (default: $NUMA_ARGS) - Pass in quotes."
     echo "  --tasks, -ta               Set the tasks to run (default: $TASKS) - accepts 'fill', 'bench', 'fill,bench'"
+    echo "  --log-prefix, -lp          Set the log folder name"
     echo "  --help, -h                 Display this help message"
 }
 
@@ -40,7 +41,7 @@ conduct_test() {
         echo "---------------------------------------------"
 
         # Bench database
-        ./benchmark_rw.sh -d $DATABASE_DIR -r $ROCKSDB_DIR -m $MAX_OPS -t $NUM_THREADS -j $MAX_BG_JOBS -b $TEST -du $DURATION -na "$NUMA_ARGS" -rw $RW_PERCENT
+        ./benchmark_rw.sh -d $DATABASE_DIR -r $ROCKSDB_DIR -m $MAX_OPS -t $NUM_THREADS -j $MAX_BG_JOBS -b $TEST -du $DURATION -na "$NUMA_ARGS" -rw $RW_PERCENT -lp $LOG_PREFIX
     
     fi
 }
@@ -55,6 +56,7 @@ BENCH_TYPE="qat,zstd"
 RW_PERCENT=80
 DURATION=120
 TASKS="bench"
+LOG_PREFIX="logs"
 
 while [ "$1" != "" ]; do
     case $1 in
@@ -98,6 +100,9 @@ while [ "$1" != "" ]; do
             TASKS="$2"
             shift 1;
             ;;
+        --log-prefix | -lp )
+            LOG_PREFIX="$2"
+            shift 1;
         --help | -h )
             display_help
             exit 0
