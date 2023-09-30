@@ -132,8 +132,8 @@ dbs_size=0
 dbs_size=$(echo "scale=2;$dbs_size/1024/1024" | bc)
 
 mkdir -p $LOG_PREFIX > /dev/null 2>&1
-touch logs/dbs_size_${BENCH_TYPE}
-echo "$dbs_size" > logs/dbs_size_${BENCH_TYPE}
+touch ${LOG_PREFIX}/dbs_size_${BENCH_TYPE}
+echo "$dbs_size" > ${LOG_PREFIX}/dbs_size_${BENCH_TYPE}
 
 # Readrandomwriterandom
 echo "$RW_PERCENT/$(expr 100 - $RW_PERCENT) READ/WRITE RocksDB WORKLOAD"
@@ -153,24 +153,24 @@ echo "$RW_PERCENT/$(expr 100 - $RW_PERCENT) READ/WRITE RocksDB WORKLOAD"
     --use_direct_reads=false --use_direct_io_for_flush_and_compaction=false \
     --max_background_jobs="$MAX_BG_JOBS" --subcompactions=5 --readwritepercent="$RW_PERCENT" \
     --max_write_buffer_number=20 --min_write_buffer_number_to_merge=1 \
-    --level0_file_num_compaction_trigger=10 --level0_slowdown_writes_trigger=60 --level0_stop_writes_trigger=120 --max_bytes_for_level_base=671088640 > $LOG_PREFIX/output_${BENCH_TYPE}_${i}.txt 2>&1 &
+    --level0_file_num_compaction_trigger=10 --level0_slowdown_writes_trigger=60 --level0_stop_writes_trigger=120 --max_bytes_for_level_base=671088640 > ${LOG_PREFIX}/output_${BENCH_TYPE}_${i}.txt 2>&1 &
     pids[${i}]=$!
 # done
 
-sar $DURATION 1 > logs/cpu_util_${BENCH_TYPE}.txt &
+sar $DURATION 1 > ${LOG_PREFIX}/cpu_util_${BENCH_TYPE}.txt &
 
 countdown $DURATION ${pids[0]}
 for pid in ${pids[*]}; do
     wait $pid
 done
 
-tpt_rw=$(cat logs/output_${BENCH_TYPE}_* | grep readrandomwriterandom | tr -s " " | cut -d " " -f 5 | paste -s -d+ - | bc)
+tpt_rw=$(cat ${LOG_PREFIX}/output_${BENCH_TYPE}_* | grep readrandomwriterandom | tr -s " " | cut -d " " -f 5 | paste -s -d+ - | bc)
 
-cpu_usr=$(cat logs/cpu_util_${BENCH_TYPE}.txt | grep Average | tr -s ' ' | cut -d ' ' -f 3)
-cpu_sys=$(cat logs/cpu_util_${BENCH_TYPE}.txt | grep Average | tr -s ' ' | cut -d ' ' -f 5)
+cpu_usr=$(cat ${LOG_PREFIX}/cpu_util_${BENCH_TYPE}.txt | grep Average | tr -s ' ' | cut -d ' ' -f 3)
+cpu_sys=$(cat ${LOG_PREFIX}/cpu_util_${BENCH_TYPE}.txt | grep Average | tr -s ' ' | cut -d ' ' -f 5)
 cpu_tot=$(echo "$cpu_usr+$cpu_sys" | bc)
 
-sum_p99_get_latency=$(cat logs/output_${BENCH_TYPE}_* | grep rocksdb.db.get.micros | cut -d ' ' -f 10 | paste -s -d+ - | bc)
+sum_p99_get_latency=$(cat ${LOG_PREFIX}/output_${BENCH_TYPE}_* | grep rocksdb.db.get.micros | cut -d ' ' -f 10 | paste -s -d+ - | bc)
 avg_p99_get_latency=$(echo "scale=2; $sum_p99_get_latency/$NUM_QAT" | bc)
 
 echo "Read Write throughput (ops/s): " $tpt_rw
