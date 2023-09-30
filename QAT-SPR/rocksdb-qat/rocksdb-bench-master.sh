@@ -138,4 +138,4 @@ echo -e "\n---------------------------------------------"
 echo "Summarizing Results"
 echo "---------------------------------------------"
 
-./summarise.sh
+./summarise.sh --log-dir $LOG_PREFIX
