@@ -92,6 +92,7 @@ while [ "$1" != "" ]; do
         --log-prefix | -lp )
             LOG_PREFIX="$2"
             shift 1;
+            ;;
         --help | -h )
             display_help
             exit 0
