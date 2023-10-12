@@ -111,14 +111,16 @@ function countdown {
     printf "\n"
 }
 
-mkdir "$log_pre-$(date +%Y-%m-%d-%H:%M:%S)" 2>1
+LOG_DIR="$log_pre-$(date +%Y-%m-%d-%H:%M:%S)"
+
+mkdir $LOG_DIR
 
 # Run wrk and save output to log file
 
 echo -e "\nExecuting WRK test"
 log_file="${size}${with_qat}_query.log"
 wrk -t $threads -c $connections -d ${duration}s  -L --timeout 4s \
- -H "Connection: keep-alive" "https://$server/$size" > "$log_pre-$(date +%Y-%m-%d-%H:%M:%S)/$log_file" 2>&1 &
+ -H "Connection: keep-alive" "https://$server/$size" > "$LOG_DIR/$log_file" 2>&1 &
 pid=$!
 countdown $duration $pid
 
