@@ -27,7 +27,7 @@ function display_usage() {
   echo "  --connections <num>      Set the number of connections (default: $connections)"
   echo "  --workloads <comma separated list> Set the workloads to run (default: $workloads)"
   echo "  --cl-cores   <Comma separated range of wrk cores pinning> (default: $cl_cores)"
-  echo "  --sv-cores   "<Comma separated range of nginx cores pinning> (default: $sv_cores)""
+  echo "  --sv-cores   <Comma separated range of nginx cores pinning> (default: $sv_cores)"
   echo "  -h, --help               Display this help message"
 }
 
