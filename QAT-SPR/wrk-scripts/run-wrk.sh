@@ -111,7 +111,7 @@ function countdown {
     printf "\n"
 }
 
-mkdir logs 2>1
+mkdir "$log_pre-$(date +%Y-%m-%d-%H:%M:%S)" 2>1
 
 # Run wrk and save output to log file
 
