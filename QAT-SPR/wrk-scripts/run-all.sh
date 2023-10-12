@@ -28,6 +28,7 @@ function display_usage() {
   echo "  --workloads <comma separated list> Set the workloads to run (default: $workloads)"
   echo "  --cl-cores   <Comma separated range of wrk cores pinning> (default: $cl_cores)"
   echo "  --sv-cores   <Comma separated range of nginx cores pinning> (default: $sv_cores)"
+  echo "  --log-prefix  Prefix for log directory"
   echo "  -h, --help               Display this help message"
 }
 
