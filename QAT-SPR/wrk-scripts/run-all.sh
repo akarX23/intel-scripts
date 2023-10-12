@@ -176,4 +176,4 @@ echo "+++++++++++++++++++++++++++++++++++++++++++++"
 echo "Summarizing results"
 echo -e "+++++++++++++++++++++++++++++++++++++++++++++\n"
 
-./summarise.sh
+./summarise.sh --log-dir $log_pre
