@@ -11,6 +11,8 @@ nginx_wqat_cong_path="/home/akarx/QAT-installs/NGINX/conf/wqat.conf"
 threads=28
 connections=2000
 workloads="100KB,256KB,750KB,1MB"
+cl_cores="56-111"
+log_pre="logs"
 
 function display_usage() {
   echo "Usage: $0 [options]"
@@ -23,6 +25,7 @@ function display_usage() {
   echo "  --threads <num>          Set the number of threads (default: $threads)"
   echo "  --connections <num>      Set the number of connections (default: $connections)"
   echo "  --workloads <comma separated list> Set the workloads to run (default: $workloads)"
+  echo "  --cl-cores   <Comma separated range of wrk cores pinning> (default: $workloads)"
   echo "  -h, --help               Display this help message"
 }
 
@@ -70,6 +73,16 @@ while [[ $# -gt 0 ]]; do
       shift # past argument
       shift # past value
       ;;
+    --cl-cores)
+      cl_cores="$2"
+      shift
+      shift
+      ;;
+    --log-prefix)
+      log_pre="$2"
+      shift
+      shift
+      ;;
     -h|--help) # Display help message
       display_usage
       exit 0
@@ -96,7 +109,7 @@ run_workloads () {
     echo "---------------------------------------------"
     echo "Running wrk with $size size"
     echo "---------------------------------------------"
-    numactl -C 56-111 ./run-wrk.sh --server $server --size $size --duration $duration --threads $threads --connections $connections $2
+    numactl -C $cl_cores ./run-wrk.sh --server $server --size $size --duration $duration --threads $threads --connections $connections $2 --log-prefix $log_pre
     echo
   done
 }

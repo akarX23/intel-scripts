@@ -9,6 +9,7 @@ with_qat=""
 duration=120
 threads=28
 connections=2000
+log_pre="logs"
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -43,6 +44,11 @@ while [[ $# -gt 0 ]]; do
       shift # past argument
       shift # past value
       ;;
+    --log-prefix)
+      log_pre="$2"
+      shift
+      shift
+      ;;
     *) # unknown option
       shift # past argument
       ;;
@@ -51,7 +57,7 @@ done
 
 # Check if required arguments are provided
 if [ -z "$server" ] || [ -z "$size" ]; then
-  echo "Usage: $0 --server <IP address:PORT(443)> --size <1MB|10KB|100KB> --duration <duration in seconds> [--with-qat]"
+  echo "Usage: $0 --server <IP address:PORT(443)> --size <1MB|10KB|100KB> --duration <duration in seconds> [--with-qat] --log-prefix <Prefix for log directory>"
   exit 1
 fi
 
@@ -112,7 +118,7 @@ mkdir logs 2>1
 echo -e "\nExecuting WRK test"
 log_file="${size}${with_qat}_query.log"
 wrk -t $threads -c $connections -d ${duration}s  -L --timeout 4s \
- -H "Connection: keep-alive" "https://$server/$size" > "logs/$log_file" 2>&1 &
+ -H "Connection: keep-alive" "https://$server/$size" > "$log_pre-$(date +%Y-%m-%d-%H:%M:%S)/$log_file" 2>&1 &
 pid=$!
 countdown $duration $pid
 
