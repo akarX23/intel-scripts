@@ -112,7 +112,7 @@ function countdown {
 }
 
 
-mkdir $log_pre
+mkdir $log_pre 2>1 
 
 # Run wrk and save output to log file
 
