@@ -117,7 +117,7 @@ run_workloads () {
     echo "---------------------------------------------"
     echo "Running wrk with $size size"
     echo "---------------------------------------------"
-    numactl -C $cl_cores ./run-wrk.sh --server $server --size $size --duration $duration --threads $threads --connections $connections $2 --log-prefix $log_pre
+    numactl -C $cl_cores ./run-wrk.sh --server $server --size $size --duration $duration --threads $threads --connections $connections $2 --log-prefix $log_pre --sv-cores $sv_cores
     echo
   done
 }
@@ -127,8 +127,6 @@ flush_cache() {
   sync; echo 3 > /proc/sys/vm/drop_caches
   sleep 5
 }
-
-# cat /sys/kernel/debug/qat_4xxx_0000:6b:00.0/fw_counters
 
 echo "Enabling QAT..."
 eval $nginx_bin_path -s stop 2> /dev/null
@@ -146,10 +144,8 @@ sleep 3
 ./alloc_nginx.sh $sv_cores &> /dev/null 
 
 mkdir -p logs
-# sar  -n DEV $(($(( $duration )) * 4)) 1 > logs/qat_sar.log &
 
 run_workloads "$workloads" --with-qat
-# cat /sys/kernel/debug/qat_4xxx_0000:6b:00.0/fw_counters
 
 wait
 
