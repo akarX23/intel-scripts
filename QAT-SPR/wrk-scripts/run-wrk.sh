@@ -10,6 +10,7 @@ duration=120
 threads=28
 connections=2000
 log_pre="logs"
+sv_cores=""
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -24,6 +25,11 @@ while [[ $# -gt 0 ]]; do
       size="$2"
       shift # past argument
       shift # past value
+      ;;
+    --sv-cores)
+      sv_cores="$2"
+      shift
+      shift
       ;;
     --duration)
       duration="$2"
@@ -56,8 +62,8 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Check if required arguments are provided
-if [ -z "$server" ] || [ -z "$size" ]; then
-  echo "Usage: $0 --server <IP address:PORT(443)> --size <1MB|10KB|100KB> --duration <duration in seconds> [--with-qat] --log-prefix <Prefix for log directory>"
+if [ -z "$server" ] || [ -z "$size" ] || [ -z "$sv_cores"]; then
+  echo "Usage: $0 --server <IP address:PORT(443)> --size <1MB|10KB|100KB> --duration <duration in seconds> [--with-qat] --log-prefix <Prefix for log directory> --sv-cores <Server pinned cores for monitoring>"
   exit 1
 fi
 
@@ -118,9 +124,17 @@ mkdir $log_pre 2>1
 
 echo -e "\nExecuting WRK test"
 log_file="${size}${with_qat}_query.log"
+cpu_util_file="${size}${with_qat}_cpu.log"
+
+sar -P $sv_cores 1 $duration > "$log_pre/$cpu_util_file" &
 wrk -t $threads -c $connections -d ${duration}s  -L --timeout 4s \
  -H "Connection: keep-alive"  -H "Accept-Encoding: gzip" "https://$server/$size" > "$log_pre/$log_file" 2>&1 &
 pid=$!
+
+echo -e "\n--------------------------------\n" >> "$log_pre/$log_file"
+cat $cpu_util_file >> "$log_pre/$log_file"
+rm $cpu_util_file
+
 countdown $duration $pid
 
-echo -e "\nWrk script executed for $size. Logs saved under logs/ directory."
+echo -e "\nWrk script executed for $size. Logs saved under $log_pre/ directory."

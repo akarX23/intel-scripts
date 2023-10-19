@@ -83,6 +83,11 @@ summarize_log_file() {
   requests_sec=$(echo "$output" | awk '/Requests\/sec/ {print $2}')
   data_sec=$(echo "$output" | awk '/Transfer\/sec/ {print $2}')
 
+  # Extract CPU Utilization
+  cpu_util_usr=$(echo "$output" | grep Average | tail -n +2 | tr -s ' ' | cut -d ' ' -f 3 | paste -s -d+ - | bc)
+  cpu_util_sys=$(echo "$output"  | grep Average | tail -n +2 | tr -s ' ' | cut -d ' ' -f 5 | paste -s -d+ - | bc)
+  cpu_tot=$(echo "$cpu_util_usr+$cpu_util_sys" | bc)
+
   # Call the get_content_type function
   result=($(get_content_type "$1"))
 
@@ -90,6 +95,8 @@ summarize_log_file() {
   file_size="${result[0]}"
   content_type="${result[@]:1}"
 
+  percent_change="-"
+  percent_change_cpu="-"
   # Calculate the percentage change in total data transfer if "_qat" is present in the file name
   if [[ "$1" == *_qat_* ]]; then
     # Get the corresponding log file without QAT
@@ -102,18 +109,22 @@ summarize_log_file() {
         total_data_bytes=$(convert_size_to_bytes $total_data)
         total_data_wqat_bytes=$(convert_size_to_bytes $total_data_without_qat)
 
+        total_cpu_usr_wqat=$(cat "$log_file_without_qat" | grep Average | tail -n +2 | tr -s ' ' | cut -d ' ' -f 3 | paste -s -d+ - | bc)
+        total_cpu_sys_wqat=$(cat "$log_file_without_qat" | grep Average | tail -n +2 | tr -s ' ' | cut -d ' ' -f 5 | paste -s -d+ - | bc)
+        total_cpu_wqat=$(echo "$total_cpu_usr_wqat+$total_cpu_sys_wqat" | bc)
+
         percent_change=$(echo "scale=2; (($total_data_bytes - $total_data_wqat_bytes) / $total_data_wqat_bytes) * 100" | bc)
+        percent_change_cpu=$(echo "scale=2; (($cpu_tot - $total_cpu_wqat) / $total_cpu_wqat) * 100" | bc)
 
       if (( $(echo "$percent_change >= 0" | bc -l) )); then
         percent_change="+$percent_change"
       fi
-    else
-      percent_change="-"
+      if (( $(echo "$percent_change_cpu >= 0" | bc -l) )); then
+        percent_change_cpu="+$percent_change_cpu"
+      fi
     fi
-  else
-    percent_change="-"
   fi
-  printf "| %8s | %25s | %10s | %13s | %10s | %20s | %10s | %20s | %10s | %13s | %10s | %25s |\n" $file_size "$content_type" $threads   $connections   $duration  $total_requests   $requests_sec  $total_data  $data_sec  $ninety_ninth_p  $max_requests  $percent_change
+  printf "| %8s | %25s | %10s | %13s | %10s | %20s | %10s | %20s | %10s | %10s | %13s | %10s | %25s | %25s |\n" $file_size "$content_type" $threads   $connections   $duration  $total_requests   $requests_sec  $total_data $cpu_tot  $data_sec  $ninety_ninth_p  $max_requests  $percent_change $percent_change_cpu
 }
 
 append_files() {
@@ -148,11 +159,11 @@ echo "Number of QAT Devices: $(lspci | grep Eth | wc -l)"
 echo -e "CPU: $(lscpu | grep "Model name" | cut -d ":" -f 2 | sed -e 's/^[[:space:]]*//')\n"
 
 # Calculate the width of the table
-table_width=209
+table_width=248
 
 # Print table header
 echo "+$(printf "%0.s-" $(seq 1 $table_width))+"
-printf "| %8s | %25s | %10s | %13s | %10s | %20s | %10s | %20s | %10s | %13s | %10s | %25s |\n" "Workload" "Type" "Threads" "Connections" "Duration" "Total Requests" "Requests/s" "Total Data Transfer" "Transfer/s" "99% Latency" "Max Req/s" "% Change in Throughput"
+printf "| %8s | %25s | %10s | %13s | %10s | %20s | %10s | %20s | %10s | %10s | %13s | %10s | %25s | %25s |\n" "Workload" "Type" "Threads" "Connections" "Duration" "Total Requests" "Requests/s" "Total Data Transfer" "% CPU" "Transfer/s" "99% Latency" "Max Req/s" "% Change in Throughput" "% Change in CPU"
 echo "+$(printf "%0.s-" $(seq 1 $table_width))+"
 
 # Process each log file

@@ -21,6 +21,7 @@ do
   for ((core_num=${curr_range[0]}; core_num <= ${curr_range[1]}; core_num++ ))
   do
     taskset -pc $core_num ${PIDS[$pid_counter]}
+    renice -20 ${PIDS[$pid_counter]}
     ((pid_counter++))
   done
 done
