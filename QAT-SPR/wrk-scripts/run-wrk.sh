@@ -62,7 +62,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Check if required arguments are provided
-if [ -z "$server" ] || [ -z "$size" ] || [ -z "$sv_cores"]; then
+if [ -z "$server" ] || [ -z "$size" ] || [ -z "$sv_cores" ]; then
   echo "Usage: $0 --server <IP address:PORT(443)> --size <1MB|10KB|100KB> --duration <duration in seconds> [--with-qat] --log-prefix <Prefix for log directory> --sv-cores <Server pinned cores for monitoring>"
   exit 1
 fi
@@ -131,10 +131,10 @@ wrk -t $threads -c $connections -d ${duration}s  -L --timeout 4s \
  -H "Connection: keep-alive"  -H "Accept-Encoding: gzip" "https://$server/$size" > "$log_pre/$log_file" 2>&1 &
 pid=$!
 
-echo -e "\n--------------------------------\n" >> "$log_pre/$log_file"
-cat $cpu_util_file >> "$log_pre/$log_file"
-rm $cpu_util_file
-
 countdown $duration $pid
+
+echo -e "\n--------------------------------\n" >> "$log_pre/$log_file"
+cat "$log_pre/$cpu_util_file" >> "$log_pre/$log_file"
+rm "$log_pre/$cpu_util_file"
 
 echo -e "\nWrk script executed for $size. Logs saved under $log_pre/ directory."
