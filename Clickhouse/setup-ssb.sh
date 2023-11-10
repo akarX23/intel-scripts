@@ -75,36 +75,20 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
+create_table_query="
+    CREATE TABLE customer
+    (
+            C_CUSTKEY       UInt32,
+            C_NAME          String,
+            C_ADDRESS       String,
+            C_CITY          LowCardinality(String),
+            C_NATION        LowCardinality(String),
+            C_REGION        LowCardinality(String),
+            C_PHONE         String,
+            C_MKTSEGMENT    LowCardinality(String)
+    )
+    ENGINE = MergeTree ORDER BY (C_CUSTKEY);
 
-supplier_table="
-   CREATE TABLE supplier
-    (
-            S_SUPPKEY       UInt32,
-            S_NAME          String,
-            S_ADDRESS       String,
-            S_CITY          LowCardinality(String),
-            S_NATION        LowCardinality(String),
-            S_REGION        LowCardinality(String),
-            S_PHONE         String
-    )
-    ENGINE = MergeTree ORDER BY S_SUPPKEY;
-"
-part_table="
-    CREATE TABLE part
-    (
-            P_PARTKEY       UInt32,
-            P_NAME          String,
-            P_MFGR          LowCardinality(String),
-            P_CATEGORY      LowCardinality(String),
-            P_BRAND         LowCardinality(String),
-            P_COLOR         LowCardinality(String),
-            P_TYPE          LowCardinality(String),
-            P_SIZE          UInt8,
-            P_CONTAINER     LowCardinality(String)
-    )
-    ENGINE = MergeTree ORDER BY P_PARTKEY;
-"
-lineorder_table="
     CREATE TABLE lineorder
     (
         LO_ORDERKEY             UInt32,
@@ -126,27 +110,32 @@ lineorder_table="
         LO_SHIPMODE             LowCardinality(String)
     )
     ENGINE = MergeTree PARTITION BY toYear(LO_ORDERDATE) ORDER BY (LO_ORDERDATE, LO_ORDERKEY);
-"
-customer_table="
-    CREATE TABLE customer
-    (
-            C_CUSTKEY       UInt32,
-            C_NAME          String,
-            C_ADDRESS       String,
-            C_CITY          LowCardinality(String),
-            C_NATION        LowCardinality(String),
-            C_REGION        LowCardinality(String),
-            C_PHONE         String,
-            C_MKTSEGMENT    LowCardinality(String)
-    )
-    ENGINE = MergeTree ORDER BY (C_CUSTKEY);
-"
 
-create_table_query="
-$customer_table\n
-$supplier_table\n
-$lineorder_table\n
-$part_table
+    CREATE TABLE part
+    (
+            P_PARTKEY       UInt32,
+            P_NAME          String,
+            P_MFGR          LowCardinality(String),
+            P_CATEGORY      LowCardinality(String),
+            P_BRAND         LowCardinality(String),
+            P_COLOR         LowCardinality(String),
+            P_TYPE          LowCardinality(String),
+            P_SIZE          UInt8,
+            P_CONTAINER     LowCardinality(String)
+    )
+    ENGINE = MergeTree ORDER BY P_PARTKEY;
+
+    CREATE TABLE supplier
+    (
+            S_SUPPKEY       UInt32,
+            S_NAME          String,
+            S_ADDRESS       String,
+            S_CITY          LowCardinality(String),
+            S_NATION        LowCardinality(String),
+            S_REGION        LowCardinality(String),
+            S_PHONE         String
+    )
+    ENGINE = MergeTree ORDER BY S_SUPPKEY;
 "
 
 lineorder_flat_table="
@@ -198,14 +187,12 @@ lineorder_flat_table="
     INNER JOIN customer AS c ON c.C_CUSTKEY = l.LO_CUSTKEY
     INNER JOIN supplier AS s ON s.S_SUPPKEY = l.LO_SUPPKEY
     INNER JOIN part AS p ON p.P_PARTKEY = l.LO_PARTKEY;
-    show settings ilike 'max_memory_usage';
 "
 
 # Display configuration
 echo "Configuring with the following settings:"
 echo "SSB_DIR: $SSB_DIR"
 echo "SIZE_FACTOR: $SIZE_FACTOR"
-echo "GEN_DATA: $GEN_DATA"
 
 if [ $BUILD_SSB -eq 1 ]; then
     pprint "Cloning ssb at: $SSB_DIR"
@@ -234,12 +221,17 @@ if [ $GEN_DATA -eq 1 ]; then
 fi
 
 if [[ $FILL_SERVER == true ]]; then
-    eval "$CLICKHOUSE_BINARY client --host $ckhost --port $ckport --multiquery -q \"${create_table_query}\"" && {
-    eval "$CLICKHOUSE_BINARY client --host $ckhost --port $ckport --query \"INSERT INTO customer FORMAT CSV\" < $SSB_DIR/customer.tbl"
-    eval "$CLICKHOUSE_BINARY client --host $ckhost --port $ckport --query \"INSERT INTO part FORMAT CSV\" < $SSB_DIR/part.tbl"
-    eval "$CLICKHOUSE_BINARY client --host $ckhost --port $ckport --query \"INSERT INTO supplier FORMAT CSV\" < $SSB_DIR/supplier.tbl"
-    eval "$CLICKHOUSE_BINARY client --host $ckhost --port $ckport --query \"INSERT INTO lineorder FORMAT CSV\" < $SSB_DIR/customer.tbl"
-    }
-    eval "$CLICKHOUSE_BINARY client --host $ckhost --port $ckport --multiquery -q \"${lineorder_flat_table}\""
+    pprint "Creating Tables"
+    ${CLICKHOUSE_BINARY} client --host $ckhost --port $ckport --multiquery -q "$create_table_query"
+    pprint "Inserting customer table"
+    ${CLICKHOUSE_BINARY} client --host $ckhost --port $ckport --query "INSERT INTO customer FORMAT CSV" < ${SSB_DIR}/customer.tbl
+    pprint "Inserting part table"
+    ${CLICKHOUSE_BINARY} client --host $ckhost --port $ckport --query "INSERT INTO part FORMAT CSV" < ${SSB_DIR}/part.tbl
+    pprint "Inserting supplier table"
+    ${CLICKHOUSE_BINARY} client --host $ckhost --port $ckport --query "INSERT INTO supplier FORMAT CSV" < ${SSB_DIR}/supplier.tbl
+    pprint "Inserting lineorder table"
+    ${CLICKHOUSE_BINARY} client --host $ckhost --port $ckport --query "INSERT INTO lineorder FORMAT CSV" < ${SSB_DIR}/lineorder.tbl
+    pprint "Creating lineorder_flat table"
+    ${CLICKHOUSE_BINARY} client --host $ckhost --port $ckport --multiquery -q "$lineorder_flat_table"
 fi
 
