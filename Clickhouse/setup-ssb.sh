@@ -142,7 +142,8 @@ customer_table="
     ENGINE = MergeTree ORDER BY (C_CUSTKEY);
 "
 
-create_table_query="$customer_table\n
+create_table_query="
+$customer_table\n
 $supplier_table\n
 $lineorder_table\n
 $part_table
@@ -204,7 +205,7 @@ lineorder_flat_table="
 echo "Configuring with the following settings:"
 echo "SSB_DIR: $SSB_DIR"
 echo "SIZE_FACTOR: $SIZE_FACTOR"
-echo "ONLY_GEN_DATA: $ONLY_GEN_DATA"
+echo "GEN_DATA: $GEN_DATA"
 
 if [ $BUILD_SSB -eq 1 ]; then
     pprint "Cloning ssb at: $SSB_DIR"
@@ -233,11 +234,11 @@ if [ $GEN_DATA -eq 1 ]; then
 fi
 
 if [[ $FILL_SERVER == true ]]; then
-    eval $CLICKHOUSE_BINARY client --host $ckhost --port $ckport --multiquery --query "${create_table_query}"
-    eval $CLICKHOUSE_BINARY client --host $ckhost --port $ckport --query "INSERT INTO customer FORMAT CSV" < $SSB_DIR/customer.tbl
-    eval $CLICKHOUSE_BINARY client --host $ckhost --port $ckport --query "INSERT INTO part FORMAT CSV" < $SSB_DIR/part.tbl
-    eval $CLICKHOUSE_BINARY client --host $ckhost --port $ckport --query "INSERT INTO supplier FORMAT CSV" < $SSB_DIR/supplier.tbl
-    eval $CLICKHOUSE_BINARY client --host $ckhost --port $ckport --query "INSERT INTO lineorder FORMAT CSV" < $SSB_DIR/customer.tbl
-    eval $CLICKHOUSE_BINARY client --host $ckhost --port $ckport --multiquery --query "${lineorder_flat_table}"
+    eval "$CLICKHOUSE_BINARY client --host $ckhost --port $ckport --multiquery --query \"${create_table_query}\""
+    eval "$CLICKHOUSE_BINARY client --host $ckhost --port $ckport --query \"INSERT INTO customer FORMAT CSV\" < $SSB_DIR/customer.tbl"
+    eval "$CLICKHOUSE_BINARY client --host $ckhost --port $ckport --query \"INSERT INTO part FORMAT CSV\" < $SSB_DIR/part.tbl"
+    eval "$CLICKHOUSE_BINARY client --host $ckhost --port $ckport --query \"INSERT INTO supplier FORMAT CSV\" < $SSB_DIR/supplier.tbl"
+    eval "$CLICKHOUSE_BINARY client --host $ckhost --port $ckport --query \"INSERT INTO lineorder FORMAT CSV\" < $SSB_DIR/customer.tbl"
+    eval "$CLICKHOUSE_BINARY client --host $ckhost --port $ckport --multiquery --query \"${lineorder_flat_table}\""
 fi
 
