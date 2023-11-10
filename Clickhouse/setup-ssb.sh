@@ -234,11 +234,12 @@ if [ $GEN_DATA -eq 1 ]; then
 fi
 
 if [[ $FILL_SERVER == true ]]; then
-    eval "$CLICKHOUSE_BINARY client --host $ckhost --port $ckport --multiquery --query \"${create_table_query}\""
+    eval "$CLICKHOUSE_BINARY client --host $ckhost --port $ckport --multiquery -q \"${create_table_query}\"" && {
     eval "$CLICKHOUSE_BINARY client --host $ckhost --port $ckport --query \"INSERT INTO customer FORMAT CSV\" < $SSB_DIR/customer.tbl"
     eval "$CLICKHOUSE_BINARY client --host $ckhost --port $ckport --query \"INSERT INTO part FORMAT CSV\" < $SSB_DIR/part.tbl"
     eval "$CLICKHOUSE_BINARY client --host $ckhost --port $ckport --query \"INSERT INTO supplier FORMAT CSV\" < $SSB_DIR/supplier.tbl"
     eval "$CLICKHOUSE_BINARY client --host $ckhost --port $ckport --query \"INSERT INTO lineorder FORMAT CSV\" < $SSB_DIR/customer.tbl"
-    eval "$CLICKHOUSE_BINARY client --host $ckhost --port $ckport --multiquery --query \"${lineorder_flat_table}\""
+    }
+    eval "$CLICKHOUSE_BINARY client --host $ckhost --port $ckport --multiquery -q \"${lineorder_flat_table}\""
 fi
 
