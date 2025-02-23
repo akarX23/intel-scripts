@@ -56,16 +56,28 @@ fi
 # Download images
 echo "Downloading images"
 cd $WORKDIR
-gdown 16-PyrfqkFwRTU3pz3jctQlpGs9x18Nda
+if [ ! -f "converted_pngs.zip" ]; then
+    echo "Downloading images"
+    gdown 16-PyrfqkFwRTU3pz3jctQlpGs9x18Nda
+else
+    echo "Images archive already exists, skipping download."
+fi
 
 # Extract images
 echo "Extracting images"
 sudo apt install -y unzip
-unzip -o converted_pngs.zip -d images
+unzip -u converted_pngs.zip -d images
 NUM_IMAGES=$(ls images | wc -l)
 
-# Spawn the vLLM server
-VLLM_SKIP_WARMUP=true vllm serve $MODEL --enforce-eager --max-model-len 8192 --max_num_seqs 16 & 
+# Determine vLLM command based on model
+if [ "$MODEL" == "meta-llama/Llama-3.2-11B-Vision-Instruct" ]; then
+    VLLM_COMMAND="VLLM_SKIP_WARMUP=true vllm serve $MODEL --enforce-eager --max-model-len 8192 --max_num_seqs 16 &"
+else
+    VLLM_COMMAND="VLLM_SKIP_WARMUP=true vllm serve $MODEL --max-model-len 8192 --max_num_seqs 16 &"
+fi
+
+# Start vLLM server in background
+eval $VLLM_COMMAND
 VLLM_PID=$!
 echo "vLLM server started with PID $VLLM_PID"
 
@@ -93,7 +105,7 @@ done
 echo "Warmup complete. Running actual benchmark."
 
 # Run actual benchmark script
-python3 bench.py --cores 4 --deployments 1 --total_requests $NUM_IMAGES --image_folder $WORKDIR/images --num_concurrent $CONCURRENCY --model $MODEL --host localhost
+python3 bench.py --cores 4 --deployments 1 --total_requests $NUM_IMAGES --image_folder $WORKDIR/images --num_concurrent $CONC --model $MODEL --host localhost
 
 # Clean up
 echo "Stopping vLLM server"
