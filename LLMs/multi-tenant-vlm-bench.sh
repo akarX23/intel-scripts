@@ -1,14 +1,5 @@
 #!/bin/bash
 
-# clone vllm-fork if vllm is not available
-# checkout to the v1.20.0
-# install dependencies
-# downlaod the zipped images
-# unzip images to a folder
-# run the vLLM server in background
-# Continuously check the /health endpoint for status
-# Once vLLM is ready, launch the python benchmark script for 1 concurrent requests
-
 # Parse command-line arguments
 while [[ "$#" -gt 0 ]]; do
   case $1 in
@@ -20,6 +11,14 @@ while [[ "$#" -gt 0 ]]; do
       MODEL="$2"
       shift 2
       ;;
+    --conc)
+      CONC="$2"
+      shift 2
+      ;;
+    --warm-iter)
+      WARMUP_ITERATIONS="$2"
+      shift 2
+      ;;
     *)
       echo "Unknown parameter: $1"
       exit 1
@@ -29,6 +28,7 @@ done
 
 WORKDIR=${WORKDIR:-$HOME}
 MODEL=${MODEL:-meta-llama/Llama-3.2-11B-Vision-Instruct}
+CONC=${CONC:-1}
 
 HF_TOKEN=$HF_TOKEN
 cd $WORKDIR
@@ -83,3 +83,18 @@ done
 # Download benchmark script
 wget https://raw.githubusercontent.com/akarX23/intel-scripts/refs/heads/master/LLMs/open-ai-client-benchmark-vlm.py -O bench.py
 
+# Run warmup benchmark
+echo "Running warmup benchmark for $WARMUP_ITERATIONS iterations"
+for ((i=1; i<=WARMUP_ITERATIONS; i++)); do
+    echo "Warmup iteration $i of $WARMUP_ITERATIONS"
+    python3 bench.py --cores 4 --deployments 1 --total_requests $NUM_IMAGES --image_folder $WORKDIR/images --num_concurrent $CONC --model $MODEL --host localhost
+done
+
+echo "Warmup complete. Running actual benchmark."
+
+# Run actual benchmark script
+python3 bench.py --cores 4 --deployments 1 --total_requests $NUM_IMAGES --image_folder $WORKDIR/images --num_concurrent $CONCURRENCY --model $MODEL --host localhost
+
+# Clean up
+echo "Stopping vLLM server"
+kill $VLLM_PID
