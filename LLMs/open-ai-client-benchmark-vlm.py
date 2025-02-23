@@ -7,7 +7,7 @@ import requests
 from concurrent.futures import ThreadPoolExecutor
 
 # Function to send a request (updated version)
-def send_request(image_path):
+def send_request(image_path, model, host):
     # Open the image and encode it in Base64
     with open(image_path, "rb") as f:
         image = base64.b64encode(f.read()).decode("utf-8")
@@ -17,7 +17,7 @@ def send_request(image_path):
 
     # Prepare the request data
     data = {
-        "model": "llava-hf/llava-v1.6-mistral-7b-hf",
+        "model": model,
         "messages": [
             {
                 "role": "user",
@@ -37,7 +37,7 @@ def send_request(image_path):
     start_time = time.time()  # Record the start time
 
     # Send the request to the server
-    response = requests.post("http://0.0.0.0:8000/v1/chat/completions", json=data, headers=headers)
+    response = requests.post(f"http://{host}:8000/v1/chat/completions", json=data, headers=headers)
 
     # Check the response
     result = response.json().get("choices", [{}])[0].get("message", {}).get("content", "No response")
@@ -56,9 +56,10 @@ if __name__ == "__main__":
     parser.add_argument("--total_requests", type=int, required=True, help="Total number of input requests")
     parser.add_argument("--image_folder", type=str, required=True, help="Path to the folder containing images")
     parser.add_argument("--deployments", type=int, default=1, help="Total deployments")
+    parser.add_argument("--model", type=str, default="meta-llama/Llama-3.2-11B-Vision-Instruct", help="Model to benchmark")
+    parser.add_argument("--host", type=str, default="localhost", help="Server host")
 
     args = parser.parse_args()
-
 
  # Get all image files in the folder
     image_files = [
@@ -88,7 +89,7 @@ if __name__ == "__main__":
 
     # Use ThreadPoolExecutor to send requests in parallel
     with ThreadPoolExecutor(max_workers=args.num_concurrent) as executor:
-        futures = executor.map(send_request, image_data_list)
+        futures = executor.map(send_request, image_data_list, args.model, args.host)
 
     # Collect and print results
     with open(log_file_name, "w") as log_file:
