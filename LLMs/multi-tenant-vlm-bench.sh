@@ -54,7 +54,6 @@ else
 fi
 
 # Download images
-echo "Downloading images"
 cd $WORKDIR
 if [ ! -f "converted_pngs.zip" ]; then
     echo "Downloading images"
@@ -67,7 +66,7 @@ fi
 echo "Extracting images"
 sudo apt install -y unzip
 unzip -u converted_pngs.zip -d images
-NUM_IMAGES=$(ls images | wc -l)
+NUM_IMAGES=$(ls images/converted_pngs | wc -l)
 
 # Determine vLLM command based on model
 if [ "$MODEL" == "meta-llama/Llama-3.2-11B-Vision-Instruct" ]; then
@@ -99,13 +98,13 @@ wget https://raw.githubusercontent.com/akarX23/intel-scripts/refs/heads/master/L
 echo "Running warmup benchmark for $WARMUP_ITERATIONS iterations"
 for ((i=1; i<=WARMUP_ITERATIONS; i++)); do
     echo "Warmup iteration $i of $WARMUP_ITERATIONS"
-    python3 bench.py --cores 4 --deployments 1 --total_requests $NUM_IMAGES --image_folder $WORKDIR/images --num_concurrent $CONC --model $MODEL --host localhost
+    python3 bench.py --cores 4 --deployments 1 --total_requests $NUM_IMAGES --image_folder $WORKDIR/images/converted_pngs --num_concurrent $CONC --model $MODEL --host localhost
 done
 
 echo "Warmup complete. Running actual benchmark."
 
 # Run actual benchmark script
-python3 bench.py --cores 4 --deployments 1 --total_requests $NUM_IMAGES --image_folder $WORKDIR/images --num_concurrent $CONC --model $MODEL --host localhost
+python3 bench.py --cores 4 --deployments 1 --total_requests $NUM_IMAGES --image_folder $WORKDIR/images/converted_pngs --num_concurrent $CONC --model $MODEL --host localhost
 
 # Clean up
 echo "Stopping vLLM server"
