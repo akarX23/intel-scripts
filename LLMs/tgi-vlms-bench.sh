@@ -31,7 +31,7 @@ fi
 find "$IMAGES_DIR" -type f -size +1M -delete
 
 # Filter images less than or equal to 1MB and count them
-NUM_IMAGES=$(find "$IMAGES_DIR" -type f -size -1M | wc -l)
+NUM_IMAGES=$(find "$IMAGES_DIR" -type f -size 1M | wc -l)
 
 docker rm -f tgi-H1
 
