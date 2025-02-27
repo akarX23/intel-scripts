@@ -30,7 +30,7 @@ def send_request(image_path):
                 ]
             }
         ],
-        "max_tokens": 10
+        "max_tokens": 1
     }
 
     headers = {
