@@ -164,7 +164,7 @@ for concurrency in "${CONCURRENCIES[@]}"; do
             echo "vLLM,AMX,$MODEL,$NUM_DEPLOYMENTS,$CORES_PER_DEPLOYMENT,$input_len,$output_len,$concurrency,$mean_ttft,$mean_tpot,$output_token_throughput,$req_throughput,$RAM_USAGE_GB" >> "$RESULTS_CSV"
 
             # 5 second break
-            sleep 5
+            sleep 30
         done
     done
 done
