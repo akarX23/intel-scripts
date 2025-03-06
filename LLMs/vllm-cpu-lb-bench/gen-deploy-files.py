@@ -8,7 +8,7 @@ def parse_core_ranges(core_ranges):
     """Parses a comma-separated list of core ranges into a list of strings."""
     return [r.strip() for r in core_ranges.split(",")]
 
-def generate_vllm_services(core_ranges, docker_image, model, kv_cache, extra_args):
+def generate_vllm_services(core_ranges, docker_image, model, kv_cache, extra_args, hf_cache):
     """Generates vLLM service definitions."""
     services = {}
     for i, core_range in enumerate(core_ranges, 1):
@@ -17,6 +17,7 @@ def generate_vllm_services(core_ranges, docker_image, model, kv_cache, extra_arg
         services[service_name] = {
             "image": docker_image,
             "container_name": container_name,
+            "privileged": True,
             "environment": [
                 "VLLM_USE_V1=0",
                 "VLLM_ALLOW_LONG_MAX_MODEL_LEN=1",
@@ -24,13 +25,14 @@ def generate_vllm_services(core_ranges, docker_image, model, kv_cache, extra_arg
                 f"VLLM_CPU_KVCACHE_SPACE={kv_cache}",
                 f"VLLM_CPU_OMP_THREADS_BIND={core_range}",
                 f"HF_TOKEN={HF_TOKEN}",
-                f"HTTP_PROXY={os.environ.get('HTTP_PROXY', '')}",
-                f"HTTPS_PROXY={os.environ.get('HTTPS_PROXY', '')}",
-                f"NO_PROXY={os.environ.get('NO_PROXY', '')}"
+                f"http_proxy={os.environ.get('http_proxy', '')}",
+                f"https_proxy={os.environ.get('https_proxy', '')}",
+                f"no_proxy={os.environ.get('no_proxy', '')}"
             ],
             "cpuset": core_range,
-            "command": f"python3 -m vllm.entrypoints.openai.api_server --model {model} -tp 1 {extra_args}",
-            "networks": ["vllm_net"]
+            "command": ["--model", model, "-tp", "1"] if extra_args == "" else ["--model", model, "-tp", "1", extra_args],
+            "networks": ["vllm_net"],
+            "volumes": [f"{hf_cache}:/root/.cache/huggingface/hub"]
         }
     return services
 
@@ -93,6 +95,7 @@ if __name__ == "__main__":
     parser.add_argument("--model", required=True, help="LLM model name")
     parser.add_argument("--ha_port", required=True, help="Port for HAProxy")
     parser.add_argument("--ha_proxy_core", required=True, help="CPU core range for HAProxy")
+    parser.add_argument("--hf_cache", required=True, help="Path to huggingface hub cache")
     parser.add_argument("--vllm_extra_args", default="", help="Extra arguments for vLLM server")
 
     args = parser.parse_args()
@@ -100,7 +103,7 @@ if __name__ == "__main__":
     core_ranges = parse_core_ranges(args.core_ranges)
 
     # Generate the configurations
-    vllm_services = generate_vllm_services(core_ranges, args.docker_image, args.model, args.kv_cache, args.vllm_extra_args)
+    vllm_services = generate_vllm_services(core_ranges, args.docker_image, args.model, args.kv_cache, args.vllm_extra_args, args.hf_cache)
     haproxy_service = generate_haproxy_service(args.ha_proxy_core, args.ha_port)
     docker_compose_data = generate_docker_compose(vllm_services, haproxy_service)
     haproxy_config = generate_haproxy_config(core_ranges)
