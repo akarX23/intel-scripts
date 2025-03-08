@@ -123,7 +123,7 @@ while true; do
     fi
     sleep 5
 done
-sleep 5
+sleep 60
 
 RAM_AFTER=$(free -m | awk '/^Mem:/{print $3}')
 RAM_USAGE_GB=$(echo "scale=2; ($RAM_AFTER - $RAM_BEFORE)/1024" | bc)
