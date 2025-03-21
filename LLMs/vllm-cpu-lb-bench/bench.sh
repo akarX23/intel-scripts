@@ -16,7 +16,7 @@ OUTPUT_LENGTHS=()
 LOG_DIR=""
 NUM_DEPLOYMENTS=""
 CORES_PER_DEPLOYMENT=""
-VLLM_ROOT=""
+LLMPERF_ROOT=""
 
 # Help function
 usage() {
@@ -36,7 +36,7 @@ usage() {
     echo "  --log-dir                (Required) Set the log directory"
     echo "  --num-deployments        (Required) Set the number of deployments"
     echo "  --cores-per-deployment   (Required) Set the number of cores per deployment"
-    echo "  --vllm-root              (Required) Set the VLLM root directory"
+    echo "  --llmperf-root              (Required) Set the LLMPerf root directory"
     echo "  -h, --help               Show this help message and exit"
     exit 1
 }
@@ -57,7 +57,7 @@ while [[ "$#" -gt 0 ]]; do
         --log-dir) LOG_DIR="$2"; shift 2;;
         --num-deployments) NUM_DEPLOYMENTS="$2"; shift 2;;
         --cores-per-deployment) CORES_PER_DEPLOYMENT="$2"; shift 2;;
-        --vllm-root) VLLM_ROOT="$2"; shift 2;;
+        --llmperf-root) LLMPERF_ROOT="$2"; shift 2;;
         -h|--help) usage;;
         *) echo "Unknown option: $1"; usage;;
     esac
@@ -70,7 +70,7 @@ MISSING_ARGS=()
 [[ -z "$LOG_DIR" ]] && MISSING_ARGS+=("--log-dir")
 [[ -z "$NUM_DEPLOYMENTS" ]] && MISSING_ARGS+=("--num-deployments")
 [[ -z "$CORES_PER_DEPLOYMENT" ]] && MISSING_ARGS+=("--cores-per-deployment")
-[[ -z "$VLLM_ROOT" ]] && MISSING_ARGS+=("--vllm-root")
+[[ -z "$LLMPERF_ROOT" ]] && MISSING_ARGS+=("--llmperf-root")
 [[ ${#CONCURRENCIES[@]} -eq 0 ]] && MISSING_ARGS+=("--concurrencies")
 [[ ${#INPUT_LENGTHS[@]} -eq 0 ]] && MISSING_ARGS+=("--input-lengths")
 [[ ${#OUTPUT_LENGTHS[@]} -eq 0 ]] && MISSING_ARGS+=("--output-lengths")
@@ -100,7 +100,7 @@ echo "OUTPUT LENGTHS:       ${OUTPUT_LENGTHS[*]}"
 echo "LOG DIR:              $LOG_DIR"
 echo "NUM DEPLOYMENTS:      $NUM_DEPLOYMENTS"
 echo "CORES PER DEPLOYMENT: $CORES_PER_DEPLOYMENT"
-echo "VLLM ROOT:            $VLLM_ROOT"
+echo "LLMPerf ROOT:            $LLMPERF_ROOT"
 echo "------------------------------------"
 
 mkdir -p "$LOG_DIR"
@@ -109,7 +109,7 @@ echo -e "\n\n"
 cd $DEPLOYMENT_FILES_ROOT
 
 # Launch docker compose deployment
-echo "vLLM server is not active on $HOST:$PORT (HTTP status: $HEALTH_STATUS). Launching server..."
+echo "Launching vLLM servers..."
 RAM_BEFORE=$(free -m | awk '/^Mem:/{print $3}')
 docker compose -f docker-compose.yml up > "$LOG_DIR/vllm-server.out" 2>&1 &
 
@@ -131,7 +131,7 @@ RAM_USAGE_GB=$(echo "scale=2; ($RAM_AFTER - $RAM_BEFORE)/1024" | bc)
 CLIENT_LOG="$LOG_DIR/client.out"
 RESULTS_CSV="$LOG_DIR/results.csv"
 
-echo "Runtime,Optimizations,Model,Number of Deployments,Cores per Deployment,Input Sequence Length,Output Sequence Length,Concurrency,Mean TTFT,Mean TPOT,Output Token Throughput,Request Throughput,RAM Utilization" > "$RESULTS_CSV"
+echo "Runtime,Optimizations,Model,Number of Deployments,Cores per Deployment,Input Sequence Length,Output Sequence Length,Concurrency,Mean TTFT,P90 TTFT,Mean TPOT,P90 TPOT,Mean E2E Latency,P90 E2E Latency,Mean Output TPS,P90 Output TPS,RAM Utilization" > "$RESULTS_CSV"
 
 # Run benchmarks: nested loops for concurrency, input lengths, and output lengths
 echo -e "Starting benchmarks... \n"
@@ -142,8 +142,22 @@ for concurrency in "${CONCURRENCIES[@]}"; do
             echo -e "Running benchmark with concurrency: $concurrency, input length: $input_len, output length: $output_len \n" | tee -a "$CLIENT_LOG"
            
             # Construct the benchmark command
-            CMD="python3 $VLLM_ROOT/benchmarks/benchmark_serving.py --backend vllm --host $HOST --port $PORT --model $MODEL --request-rate inf --dataset-name $DATASET_NAME --num-prompts $NUM_PROMPTS --ignore-eos --max-concurrency $concurrency --random-input-len $input_len --random-output-len $output_len $CLIENT_ARGS"
+            CMD="python3 $LLMPERF_ROOT/token_benchmark_ray.py --backend vllm --host $HOST --port $PORT --model $MODEL --request-rate inf --dataset-name $DATASET_NAME --num-prompts $NUM_PROMPTS --ignore-eos --max-concurrency $concurrency --random-input-len $input_len --random-output-len $output_len $CLIENT_ARGS"
             
+            CMD="""
+OPENAI_API_BASE=http://$HOST:$PORT/v1/ OPENAI_API_KEY=secret_abcdefg python3 $LLMPERF_ROOT/token_benchmark_ray.py --model "$MODEL" \
+--mean-input-tokens $input_len \
+--stddev-input-tokens 0 \
+--mean-output-tokens $output_len \
+--stddev-output-tokens 0 \
+--max-num-completed-requests $((concurrency * 5)) \
+--timeout 600 \
+--num-concurrent-requests $concurrency \
+--results-dir "$LOG_DIR" \
+--llm-api openai \
+$CLIENT_ARGS
+""" 
+
             # Append the command to the client.out file
             echo -e "Running command: $CMD \n" >> $CLIENT_LOG
             
@@ -152,16 +166,20 @@ for concurrency in "${CONCURRENCIES[@]}"; do
             echo "$bench_output" >> "$CLIENT_LOG"
 
             # Extract metrics from the benchmark output using grep and awk
-            mean_ttft=$(echo "$bench_output" | grep "Mean TTFT" | awk -F: '{print $2}' | xargs)
-            mean_tpot=$(echo "$bench_output" | grep "Mean TPOT" | awk -F: '{print $2}' | xargs)
-            req_throughput=$(echo "$bench_output" | grep "Request throughput" | awk -F: '{print $2}' | xargs)
-            output_token_throughput=$(echo "$bench_output" | grep "Output token throughput" | awk -F: '{print $2}' | xargs)
+            mean_tpot=$(echo "$bench_output" | grep mean | head -n 1 | awk -F'= ' '{print $2}')
+            p90_tpot=$(echo "$bench_output" | grep p90 | head -n 1 | awk -F'= ' '{print $2}')
+            mean_ttft=$(echo "$bench_output" | grep mean | head -n 2 | awk -F'= ' '{print $2}')
+            p90_ttft=$(echo "$bench_output" | grep mean | head -n 2 | awk -F'= ' '{print $2}')
+            mean_e2e=$(echo "$bench_output" | grep mean | head -n 3 | awk -F'= ' '{print $2}')
+            p90_e2e=$(echo "$bench_output" | grep mean | head -n 3 | awk -F'= ' '{print $2}')
+            mean_output_token_throughput=$(echo "$bench_output" | grep mean | head -n 4 | awk -F'= ' '{print $2}')
+            p90_output_token_throughput=$(echo "$bench_output" | grep mean | head -n 4 | awk -F'= ' '{print $2}')
             
             # Append a separator for clarity between runs
             echo -e "\n\n\n\n" >> $CLIENT_LOG
 
             # Append the extracted metrics as a CSV line to the results file
-            echo "vLLM,AMX,$MODEL,$NUM_DEPLOYMENTS,$CORES_PER_DEPLOYMENT,$input_len,$output_len,$concurrency,$mean_ttft,$mean_tpot,$output_token_throughput,$req_throughput,$RAM_USAGE_GB" >> "$RESULTS_CSV"
+            echo "vLLM,AMX,$MODEL,$NUM_DEPLOYMENTS,$CORES_PER_DEPLOYMENT,$input_len,$output_len,$concurrency,$mean_ttft,$p90_ttft,$mean_tpot,$p90_tpot,$mean_e2e,$p90_e2e,$mean_output_token_throughput,$p90_output_token_throughput,$RAM_USAGE_GB" >> "$RESULTS_CSV"
 
             # 5 second break
             sleep 30
