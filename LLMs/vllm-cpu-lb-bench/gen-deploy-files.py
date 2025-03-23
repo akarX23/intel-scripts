@@ -38,7 +38,7 @@ def generate_vllm_services(core_ranges, docker_image, model, kv_cache, extra_arg
                 "test": ["CMD", "curl", "-f", "http://localhost:8000/v1/models"],
                 "interval": "10s",
                 "timeout": "5s",
-                "retries": 5,
+                "retries": 50,
                 "start_period": "30s"
             }
         }
