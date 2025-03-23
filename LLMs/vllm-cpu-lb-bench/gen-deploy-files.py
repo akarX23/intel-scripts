@@ -1,6 +1,7 @@
 import argparse
 import yaml
 import os
+import sys
 
 HF_TOKEN=os.getenv("HF_TOKEN")
 
@@ -70,7 +71,7 @@ def generate_nginx_service(nginx_core, nginx_port):
         "nginx": {
             "image": "nginx:latest",
             "container_name": "nginx_container",
-            "volumes": ["./nginx.conf:/etc/nginx/conf.d/default.conf:ro"],
+            "volumes": [f"{sys.path[0]}/nginx.conf:/etc/nginx/conf.d/default.conf:ro"],
             "ports": [f"{nginx_port}:{nginx_port}"],
             "cpuset": nginx_core,
             "networks": ["vllm_net"],
@@ -92,7 +93,7 @@ def generate_docker_compose(vllm_services, nginx_service):
     return compose_data
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generate docker-compose.yml and haproxy.cfg for vLLM.")
+    parser = argparse.ArgumentParser(description="Generate docker-compose.yml and nginx.conf for vLLM.")
     parser.add_argument("--core_ranges", required=True, help="Comma-separated CPU core ranges (e.g., 0-8,10-16)")
     parser.add_argument("--kv_cache", required=True, help="KV Cache size in GB")
     parser.add_argument("--docker_image", required=True, help="Docker image name for vLLM")
