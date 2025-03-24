@@ -142,15 +142,13 @@ for concurrency in "${CONCURRENCIES[@]}"; do
             echo -e "Running benchmark with concurrency: $concurrency, input length: $input_len, output length: $output_len \n" | tee -a "$CLIENT_LOG"
            
             # Construct the benchmark command
-            CMD="python3 $LLMPERF_ROOT/token_benchmark_ray.py --backend vllm --host $HOST --port $PORT --model $MODEL --request-rate inf --dataset-name $DATASET_NAME --num-prompts $NUM_PROMPTS --ignore-eos --max-concurrency $concurrency --random-input-len $input_len --random-output-len $output_len $CLIENT_ARGS"
-            
             CMD="""
 OPENAI_API_BASE=http://$HOST:$PORT/v1/ OPENAI_API_KEY=secret_abcdefg python $LLMPERF_ROOT/token_benchmark_ray.py --model "$MODEL" \
 --mean-input-tokens $input_len \
 --stddev-input-tokens 0 \
 --mean-output-tokens $output_len \
 --stddev-output-tokens 0 \
---max-num-completed-requests $((concurrency * 5)) \
+--max-num-completed-requests $NUM_PROMPTS \
 --timeout 600 \
 --num-concurrent-requests $concurrency \
 --results-dir "$LOG_DIR" \
@@ -166,14 +164,14 @@ $CLIENT_ARGS
             echo "$bench_output" >> "$CLIENT_LOG"
 
             # Extract metrics from the benchmark output using grep and awk
-            mean_tpot=$(echo "$bench_output" | grep mean | head -n 1 | awk -F'= ' '{printf "%.3f\n", $2}')
-            p90_tpot=$(echo "$bench_output" | grep p90 | head -n 1 | awk -F'= ' '{printf "%.3f\n", $2}')
-            mean_ttft=$(echo "$bench_output" | grep mean | head -n 2 | awk -F'= ' '{printf "%.3f\n", $2}')
-            p90_ttft=$(echo "$bench_output" | grep mean | head -n 2 | awk -F'= ' '{printf "%.3f\n", $2}')
-            mean_e2e=$(echo "$bench_output" | grep mean | head -n 3 | awk -F'= ' '{printf "%.3f\n", $2}')
-            p90_e2e=$(echo "$bench_output" | grep mean | head -n 3 | awk -F'= ' '{printf "%.3f\n", $2}')
-            mean_output_token_throughput=$(echo "$bench_output" | grep mean | head -n 4 | awk -F'= ' '{printf "%.3f\n", $2}')
-            p90_output_token_throughput=$(echo "$bench_output" | grep mean | head -n 4 | awk -F'= ' '{printf "%.3f\n", $2}')
+            mean_tpot=$(echo "$bench_output" | grep "mean =" | sed -n '1p' | awk -F'= ' '{printf "%.3f\n", $2}'))
+            p90_tpot=$(echo "$bench_output" | grep p90 | sed -n '1p' | awk -F'= ' '{printf "%.3f\n", $2}'))
+            mean_ttft=$(echo "$bench_output" | grep "mean =" | sed -n '2p' | awk -F'= ' '{printf "%.3f\n", $2}'))
+            p90_ttft=$(echo "$bench_output" | grep p90 | sed -n '2p' | awk -F'= ' '{printf "%.3f\n", $2}'))
+            mean_e2e=$(echo "$bench_output" | grep "mean =" | sed -n '3p' | awk -F'= ' '{printf "%.3f\n", $2}'))
+            p90_e2e=$(echo "$bench_output" | grep p90 | sed -n '3p' | awk -F'= ' '{printf "%.3f\n", $2}'))
+            mean_output_token_throughput=$(echo "$bench_output" | grep "mean =" | sed -n '4p' | awk -F'= ' '{printf "%.3f\n", $2}'))
+            p90_output_token_throughput=$(echo "$bench_output" | grep p90 | sed -n '4p' | awk -F'= ' '{printf "%.3f\n", $2}'))
             
             # Append a separator for clarity between runs
             echo -e "\n\n\n\n" >> $CLIENT_LOG
@@ -187,6 +185,7 @@ $CLIENT_ARGS
     done
 done
 
-echo "Results saved to $LOG_DIR/results.csv"
+echo -e "Saved results in $LOG_DIR/results.csv \n"
 # Stop deployments
+echo -e "Killing all deployments\n"
 docker compose down
