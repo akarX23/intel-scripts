@@ -164,14 +164,14 @@ $CLIENT_ARGS
             echo "$bench_output" >> "$CLIENT_LOG"
 
             # Extract metrics from the benchmark output using grep and awk
-            mean_tpot=$(echo "$bench_output" | grep "mean =" | sed -n '1p' | awk -F'= ' '{printf "%.3f\n", $2}'))
-            p90_tpot=$(echo "$bench_output" | grep p90 | sed -n '1p' | awk -F'= ' '{printf "%.3f\n", $2}'))
-            mean_ttft=$(echo "$bench_output" | grep "mean =" | sed -n '2p' | awk -F'= ' '{printf "%.3f\n", $2}'))
-            p90_ttft=$(echo "$bench_output" | grep p90 | sed -n '2p' | awk -F'= ' '{printf "%.3f\n", $2}'))
-            mean_e2e=$(echo "$bench_output" | grep "mean =" | sed -n '3p' | awk -F'= ' '{printf "%.3f\n", $2}'))
-            p90_e2e=$(echo "$bench_output" | grep p90 | sed -n '3p' | awk -F'= ' '{printf "%.3f\n", $2}'))
-            mean_output_token_throughput=$(echo "$bench_output" | grep "mean =" | sed -n '4p' | awk -F'= ' '{printf "%.3f\n", $2}'))
-            p90_output_token_throughput=$(echo "$bench_output" | grep p90 | sed -n '4p' | awk -F'= ' '{printf "%.3f\n", $2}'))
+            mean_tpot=$(echo "$bench_output" | grep "mean =" | sed -n '1p' | awk -F'= ' '{printf "%.3f\n", $2}')
+            p90_tpot=$(echo "$bench_output" | grep p90 | sed -n '1p' | awk -F'= ' '{printf "%.3f\n", $2}')
+            mean_ttft=$(echo "$bench_output" | grep "mean =" | sed -n '2p' | awk -F'= ' '{printf "%.3f\n", $2}')
+            p90_ttft=$(echo "$bench_output" | grep p90 | sed -n '2p' | awk -F'= ' '{printf "%.3f\n", $2}')
+            mean_e2e=$(echo "$bench_output" | grep "mean =" | sed -n '3p' | awk -F'= ' '{printf "%.3f\n", $2}')
+            p90_e2e=$(echo "$bench_output" | grep p90 | sed -n '3p' | awk -F'= ' '{printf "%.3f\n", $2}')
+            mean_output_token_throughput=$(echo "$bench_output" | grep "mean =" | sed -n '4p' | awk -F'= ' '{printf "%.3f\n", $2}')
+            p90_output_token_throughput=$(echo "$bench_output" | grep p90 | sed -n '4p' | awk -F'= ' '{printf "%.3f\n", $2}')
             
             # Append a separator for clarity between runs
             echo -e "\n\n\n\n" >> $CLIENT_LOG
