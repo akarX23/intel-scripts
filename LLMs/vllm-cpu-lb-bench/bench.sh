@@ -145,7 +145,7 @@ for concurrency in "${CONCURRENCIES[@]}"; do
             CMD="python3 $LLMPERF_ROOT/token_benchmark_ray.py --backend vllm --host $HOST --port $PORT --model $MODEL --request-rate inf --dataset-name $DATASET_NAME --num-prompts $NUM_PROMPTS --ignore-eos --max-concurrency $concurrency --random-input-len $input_len --random-output-len $output_len $CLIENT_ARGS"
             
             CMD="""
-OPENAI_API_BASE=http://$HOST:$PORT/v1/ OPENAI_API_KEY=secret_abcdefg python3 $LLMPERF_ROOT/token_benchmark_ray.py --model "$MODEL" \
+OPENAI_API_BASE=http://$HOST:$PORT/v1/ OPENAI_API_KEY=secret_abcdefg python $LLMPERF_ROOT/token_benchmark_ray.py --model "$MODEL" \
 --mean-input-tokens $input_len \
 --stddev-input-tokens 0 \
 --mean-output-tokens $output_len \

@@ -2,8 +2,10 @@ import argparse
 import yaml
 import os
 import sys
+import shlex
 
 HF_TOKEN=os.getenv("HF_TOKEN")
+default_hf_cache = os.path.expanduser("~/.cache/huggingface/hub")
 
 def parse_core_ranges(core_ranges):
     """Parses a comma-separated list of core ranges into a list of strings."""
@@ -31,7 +33,7 @@ def generate_vllm_services(core_ranges, docker_image, model, kv_cache, extra_arg
                 f"no_proxy={os.environ.get('no_proxy', '')}"
             ],
             "cpuset": core_range,
-            "command": ["--model", model, "-tp", "1", "--dtype", "bfloat16"] if extra_args == "" else ["--model", model, "-tp", "1", "--dtype", "bfloat16", extra_args],
+            "command": ["--model", model, "-tp", "1", "--dtype", "bfloat16"] if extra_args == "" else ["--model", model, "-tp", "1", "--dtype", "bfloat16"] + list(map(str, shlex.split(extra_args))),
             "networks": ["vllm_net"],
             "volumes": [f"{hf_cache}:/root/.cache/huggingface/hub"],
             "healthcheck": {
@@ -100,7 +102,7 @@ if __name__ == "__main__":
     parser.add_argument("--model", required=True, help="LLM model name")
     parser.add_argument("--nginx_port", required=True, help="Port for HAProxy")
     parser.add_argument("--nginx_core", required=True, help="CPU core range for HAProxy")
-    parser.add_argument("--hf_cache", required=True, help="Path to huggingface hub cache")
+    parser.add_argument("--hf_cache", default=default_hf_cache, help="Path to Hugging Face hub cache")
     parser.add_argument("--vllm_extra_args", default="", help="Extra arguments for vLLM server")
 
     args = parser.parse_args()
