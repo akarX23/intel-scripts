@@ -100,8 +100,8 @@ if __name__ == "__main__":
     parser.add_argument("--kv_cache", required=True, help="KV Cache size in GB")
     parser.add_argument("--docker_image", required=True, help="Docker image name for vLLM")
     parser.add_argument("--model", required=True, help="LLM model name")
-    parser.add_argument("--nginx_port", required=True, help="Port for HAProxy")
-    parser.add_argument("--nginx_core", required=True, help="CPU core range for HAProxy")
+    parser.add_argument("--nginx_port", required=True, help="Port for NGINX")
+    parser.add_argument("--nginx_core", required=True, help="CPU core range for NGINX")
     parser.add_argument("--hf_cache", default=default_hf_cache, help="Path to Hugging Face hub cache")
     parser.add_argument("--vllm_extra_args", default="", help="Extra arguments for vLLM server")
 

@@ -166,14 +166,14 @@ $CLIENT_ARGS
             echo "$bench_output" >> "$CLIENT_LOG"
 
             # Extract metrics from the benchmark output using grep and awk
-            mean_tpot=$(echo "$bench_output" | grep mean | head -n 1 | awk -F'= ' '{print $2}')
-            p90_tpot=$(echo "$bench_output" | grep p90 | head -n 1 | awk -F'= ' '{print $2}')
-            mean_ttft=$(echo "$bench_output" | grep mean | head -n 2 | awk -F'= ' '{print $2}')
-            p90_ttft=$(echo "$bench_output" | grep mean | head -n 2 | awk -F'= ' '{print $2}')
-            mean_e2e=$(echo "$bench_output" | grep mean | head -n 3 | awk -F'= ' '{print $2}')
-            p90_e2e=$(echo "$bench_output" | grep mean | head -n 3 | awk -F'= ' '{print $2}')
-            mean_output_token_throughput=$(echo "$bench_output" | grep mean | head -n 4 | awk -F'= ' '{print $2}')
-            p90_output_token_throughput=$(echo "$bench_output" | grep mean | head -n 4 | awk -F'= ' '{print $2}')
+            mean_tpot=$(echo "$bench_output" | grep mean | head -n 1 | awk -F'= ' '{printf "%.3f\n", $2}')
+            p90_tpot=$(echo "$bench_output" | grep p90 | head -n 1 | awk -F'= ' '{printf "%.3f\n", $2}')
+            mean_ttft=$(echo "$bench_output" | grep mean | head -n 2 | awk -F'= ' '{printf "%.3f\n", $2}')
+            p90_ttft=$(echo "$bench_output" | grep mean | head -n 2 | awk -F'= ' '{printf "%.3f\n", $2}')
+            mean_e2e=$(echo "$bench_output" | grep mean | head -n 3 | awk -F'= ' '{printf "%.3f\n", $2}')
+            p90_e2e=$(echo "$bench_output" | grep mean | head -n 3 | awk -F'= ' '{printf "%.3f\n", $2}')
+            mean_output_token_throughput=$(echo "$bench_output" | grep mean | head -n 4 | awk -F'= ' '{printf "%.3f\n", $2}')
+            p90_output_token_throughput=$(echo "$bench_output" | grep mean | head -n 4 | awk -F'= ' '{printf "%.3f\n", $2}')
             
             # Append a separator for clarity between runs
             echo -e "\n\n\n\n" >> $CLIENT_LOG
@@ -187,5 +187,6 @@ $CLIENT_ARGS
     done
 done
 
+echo "Results saved to $LOG_DIR/results.csv"
 # Stop deployments
 docker compose down
