@@ -52,7 +52,6 @@ def generate_nginx_config(port):
     
     return f"""
 upstream vllm_backend {{
-    random two least_conn; 
 {backends}
 }}
 
