@@ -52,6 +52,7 @@ def generate_nginx_config(port):
     
     return f"""
 upstream vllm_backend {{
+    random two least_conn;
 {backends}
 }}
 
@@ -72,7 +73,7 @@ def generate_nginx_service(nginx_core, nginx_port):
         "nginx": {
             "image": "nginx:latest",
             "container_name": "nginx_container",
-            "volumes": [f"{sys.path[0]}/nginx.conf:/etc/nginx/conf.d/default.conf:ro"],
+            "volumes": [f"{sys.path[0]}/nginx.conf:/etc/nginx/conf.d/vllm_lb.conf:ro"],
             "ports": [f"{nginx_port}:{nginx_port}"],
             "cpuset": nginx_core,
             "networks": ["vllm_net"],
