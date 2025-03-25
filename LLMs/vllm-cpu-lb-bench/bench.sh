@@ -131,7 +131,7 @@ RAM_USAGE_GB=$(echo "scale=2; ($RAM_AFTER - $RAM_BEFORE)/1024" | bc)
 CLIENT_LOG="$LOG_DIR/client.out"
 RESULTS_CSV="$LOG_DIR/results.csv"
 
-echo "Runtime,Optimizations,Model,Number of Deployments,Cores per Deployment,Input Sequence Length,Output Sequence Length,Concurrency,Mean TTFT,P90 TTFT,Mean TPOT,P90 TPOT,Mean E2E Latency,P90 E2E Latency,Mean Output TPS,P90 Output TPS,RAM Utilization" > "$RESULTS_CSV"
+echo "Runtime,Optimizations,Model,Number of Deployments,Cores per Deployment,Input Sequence Length,Output Sequence Length,Concurrency,Mean TTFT,P90 TTFT,Mean TPOT,P90 TPOT,Mean E2E Latency,P90 E2E Latency,Mean Output TPS,P90 Output TPS,Requests per Minute,RAM Utilization" > "$RESULTS_CSV"
 
 # Run benchmarks: nested loops for concurrency, input lengths, and output lengths
 echo -e "Starting benchmarks... \n"
@@ -172,12 +172,13 @@ $CLIENT_ARGS
             p90_e2e=$(echo "$bench_output" | grep p90 | sed -n '3p' | awk -F'= ' '{printf "%.3f\n", $2}')
             mean_output_token_throughput=$(echo "$bench_output" | grep "mean =" | sed -n '4p' | awk -F'= ' '{printf "%.3f\n", $2}')
             p90_output_token_throughput=$(echo "$bench_output" | grep p90 | sed -n '4p' | awk -F'= ' '{printf "%.3f\n", $2}')
+            requests_per_minute=$(echo "$bench_output" | grep "Requests Per Minute" | awk -F':' '{printf "%.3f\n", $2}')
             
             # Append a separator for clarity between runs
             echo -e "\n\n\n\n" >> $CLIENT_LOG
 
             # Append the extracted metrics as a CSV line to the results file
-            echo "vLLM,AMX,$MODEL,$NUM_DEPLOYMENTS,$CORES_PER_DEPLOYMENT,$input_len,$output_len,$concurrency,$mean_ttft,$p90_ttft,$mean_tpot,$p90_tpot,$mean_e2e,$p90_e2e,$mean_output_token_throughput,$p90_output_token_throughput,$RAM_USAGE_GB" >> "$RESULTS_CSV"
+            echo "vLLM,AMX,$MODEL,$NUM_DEPLOYMENTS,$CORES_PER_DEPLOYMENT,$input_len,$output_len,$concurrency,$mean_ttft,$p90_ttft,$mean_tpot,$p90_tpot,$mean_e2e,$p90_e2e,$mean_output_token_throughput,$p90_output_token_throughput,$requests_per_minute,$RAM_USAGE_GB" >> "$RESULTS_CSV"
 
             # 5 second break
             sleep 30
