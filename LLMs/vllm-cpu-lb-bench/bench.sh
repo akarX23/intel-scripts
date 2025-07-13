@@ -111,7 +111,7 @@ cd $DEPLOYMENT_FILES_ROOT
 # Launch docker compose deployment
 echo "vLLM server is not active on $HOST:$PORT (HTTP status: $HEALTH_STATUS). Launching server..."
 RAM_BEFORE=$(free -m | awk '/^Mem:/{print $3}')
-# docker compose -f docker-compose.yml up > "$LOG_DIR/vllm-server.out" 2>&1 &
+docker compose -f docker-compose.yml up > "$LOG_DIR/vllm-server.out" 2>&1 &
 
 # Wait for all deployments to come up
 echo "Waiting for vLLM to be ready..."
@@ -139,11 +139,35 @@ for concurrency in "${CONCURRENCIES[@]}"; do
     for input_len in "${INPUT_LENGTHS[@]}"; do
         for output_len in "${OUTPUT_LENGTHS[@]}"; do
            
-            echo -e "Running benchmark with concurrency: $concurrency, input length: $input_len, output length: $output_len \n" | tee -a "$CLIENT_LOG"
-           
-            # Construct the benchmark command
-            CMD="python3 $VLLM_ROOT/benchmarks/benchmark_serving.py --backend vllm --host $HOST --port $PORT --model $MODEL --request-rate inf --dataset-name $DATASET_NAME --num-prompts $NUM_PROMPTS --ignore-eos --max-concurrency $concurrency --random-input-len $input_len --random-output-len $output_len $CLIENT_ARGS --metric_percentiles 90 --percentile_metrics='ttft,tpot,itl,e2el'"
+            # Calculate NUM_PROMPTS based on concurrency
+            NUM_PROMPTS=$((concurrency * 5))
             
+            echo -e "Running benchmark with concurrency: $concurrency, input length: $input_len, output length: $output_len, num prompts: $NUM_PROMPTS\n" | tee -a "$CLIENT_LOG"
+
+            # Add extra args if dataset is sonnet
+            SONNET_ARGS=""
+            if [[ "$DATASET_NAME" == "sonnet" ]]; then
+                # Customize as per your sonnet handling requirement
+                SONNET_ARGS="--dataset-path $VLLM_ROOT/benchmarks/sonnet.txt --sonnet-input-len $input_len --sonnet-output-len $output_len --sonnet-prefix-len 100"
+            fi
+
+            # Construct the benchmark command
+            CMD="python3 $VLLM_ROOT/benchmarks/benchmark_serving.py \
+                --backend vllm \
+                --host $HOST \
+                --port $PORT \
+                --model $MODEL \
+                --request-rate inf \
+                --dataset-name $DATASET_NAME \
+                --num-prompts $NUM_PROMPTS \
+                --ignore-eos \
+                --max-concurrency $concurrency \
+                --random-input-len $input_len \
+                --random-output-len $output_len \
+                $SONNET_ARGS \
+                $CLIENT_ARGS \
+                --metric_percentiles 90 \
+                --percentile_metrics='ttft,tpot,itl,e2el'"
             # Append the command to the client.out file
             echo -e "Running command: $CMD \n" >> $CLIENT_LOG
             

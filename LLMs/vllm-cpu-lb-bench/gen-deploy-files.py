@@ -22,7 +22,7 @@ def generate_vllm_services(core_ranges, docker_image, model, kv_cache, extra_arg
             "container_name": container_name,
             "privileged": True,
             "environment": [
-                "VLLM_USE_V1=0",
+                "VLLM_USE_V1=1",
                 "VLLM_ALLOW_LONG_MAX_MODEL_LEN=1",
                 "VLLM_ENGINE_ITERATION_TIMEOUT_S=600",
                 f"VLLM_CPU_KVCACHE_SPACE={kv_cache}",
@@ -46,46 +46,48 @@ def generate_vllm_services(core_ranges, docker_image, model, kv_cache, extra_arg
         }
     return services
 
-def generate_nginx_config(port):
-    """Generates Nginx configuration file content."""
-    backends = "\n".join([f"    server vllm-{i}:8000 max_fails=10 fail_timeout=10000s;" for i in range(1, len(core_ranges) + 1)])
-    
-    return f"""
-upstream vllm_backend {{
-    random two least_conn;
-{backends}
-}}
+def generate_haproxy_config(core_ranges):
+    """Generates HAProxy configuration file content."""
+    backends = "\n".join([f"    server vllm-{i} vllm-{i}:8000 check" for i in range(1, len(core_ranges) + 1)])
 
-server {{
-    listen {port};
-    location / {{
-        proxy_pass http://vllm_backend;
-        proxy_connect_timeout 120s; # Time to establish connection to upstream
-        proxy_read_timeout 120s; # Time to wait for upstream to send data
-        proxy_send_timeout 120s; # Time to wait for upstream to accept data
-    }} 
-}}
+    return f"""
+global
+    log stdout format raw local0
+
+defaults
+    log global
+    timeout connect 5s
+    timeout client 50s
+    timeout server 50s
+
+frontend http_front
+    bind *:{args.ha_port}
+    default_backend vllm_backend
+
+backend vllm_backend
+    balance roundrobin
+    option httpchk GET /health
+{backends}
 """
 
-def generate_nginx_service(nginx_core, nginx_port):
-    """Generates Nginx service definition."""
+def generate_haproxy_service(ha_proxy_core, ha_port):
+    """Generates HAProxy service definition."""
     return {
-        "nginx": {
-            "image": "nginx:latest",
-            "container_name": "nginx_container",
-            "volumes": [f"{sys.path[0]}/nginx.conf:/etc/nginx/conf.d/vllm_lb.conf:ro"],
-            "ports": [f"{nginx_port}:{nginx_port}"],
-            "cpuset": nginx_core,
+        "haproxy": {
+            "image": "haproxy:latest",
+            "container_name": "haproxy_container",
+            "volumes": [f"{sys.path[0]}/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro"],
+            "ports": [f"{ha_port}:{ha_port}"],
+            "cpuset": ha_proxy_core,
             "networks": ["vllm_net"],
             "restart": "always"
         }
     }
-
-def generate_docker_compose(vllm_services, nginx_service):
+def generate_docker_compose(vllm_services, ha_service):
     """Generates the full docker-compose.yml structure."""
     compose_data = {
         "version": "3.8",
-        "services": {**vllm_services, **nginx_service},
+        "services": {**vllm_services, **ha_service},
         "networks": {
             "vllm_net": {
                 "driver": "bridge"
@@ -95,13 +97,13 @@ def generate_docker_compose(vllm_services, nginx_service):
     return compose_data
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generate docker-compose.yml and nginx.conf for vLLM.")
+    parser = argparse.ArgumentParser(description="Generate docker-compose.yml and ha.conf for vLLM.")
     parser.add_argument("--core_ranges", required=True, help="Comma-separated CPU core ranges (e.g., 0-8,10-16)")
     parser.add_argument("--kv_cache", required=True, help="KV Cache size in GB")
     parser.add_argument("--docker_image", required=True, help="Docker image name for vLLM")
     parser.add_argument("--model", required=True, help="LLM model name")
-    parser.add_argument("--nginx_port", required=True, help="Port for NGINX")
-    parser.add_argument("--nginx_core", required=True, help="CPU core range for NGINX")
+    parser.add_argument("--ha_port", required=True, help="Port for HA Proxy")
+    parser.add_argument("--ha_core", required=True, help="CPU core range for HA Proxy")
     parser.add_argument("--hf_cache", default=default_hf_cache, help="Path to Hugging Face hub cache")
     parser.add_argument("--vllm_extra_args", default="", help="Extra arguments for vLLM server")
 
@@ -111,16 +113,16 @@ if __name__ == "__main__":
 
     # Generate the configurations
     vllm_services = generate_vllm_services(core_ranges, args.docker_image, args.model, args.kv_cache, args.vllm_extra_args, args.hf_cache)
-    nginx_service = generate_nginx_service(args.nginx_core, args.nginx_port)
-    docker_compose_data = generate_docker_compose(vllm_services, nginx_service)
-    nginx_config = generate_nginx_config(args.nginx_port)
+    ha_service = generate_haproxy_service(args.ha_core, args.ha_port)
+    docker_compose_data = generate_docker_compose(vllm_services, ha_service)
+    ha_config = generate_haproxy_config(args.ha_port)
 
     # Write the docker-compose file
     with open("docker-compose.yml", "w") as f:
         yaml.dump(docker_compose_data, f, default_flow_style=False)
 
-    # Write the nginx config file
-    with open("nginx.conf", "w") as f:
-        f.write(nginx_config)
+    # Write the ha config file
+    with open("haproxy.cfg", "w") as f:
+        f.write(ha_config)
 
     print("Generated docker-compose.yml and haproxy.cfg successfully!")
