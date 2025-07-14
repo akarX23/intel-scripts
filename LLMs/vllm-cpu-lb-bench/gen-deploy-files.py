@@ -32,7 +32,6 @@ def generate_vllm_services(core_ranges, docker_image, model, kv_cache, extra_arg
                 f"https_proxy={os.environ.get('https_proxy', '')}",
                 f"no_proxy={os.environ.get('no_proxy', '')}"
             ],
-            "cpuset": core_range,
             "command": ["--model", model, "-tp", "1", "--dtype", "bfloat16"] if extra_args == "" else ["--model", model, "-tp", "1", "--dtype", "bfloat16"] + list(map(str, shlex.split(extra_args))),
             "networks": ["vllm_net"],
             "volumes": [f"{hf_cache}:/root/.cache/huggingface/hub"],
@@ -78,6 +77,7 @@ def generate_haproxy_service(ha_proxy_core, ha_port):
             "container_name": "haproxy_container",
             "volumes": [f"{sys.path[0]}/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro"],
             "ports": [f"{ha_port}:{ha_port}"],
+            "cpuset": ha_proxy_core,
             "networks": ["vllm_net"],
             "restart": "always"
         }
