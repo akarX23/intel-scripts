@@ -78,7 +78,6 @@ def generate_haproxy_service(ha_proxy_core, ha_port):
             "container_name": "haproxy_container",
             "volumes": [f"{sys.path[0]}/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro"],
             "ports": [f"{ha_port}:{ha_port}"],
-            "cpuset": ha_proxy_core,
             "networks": ["vllm_net"],
             "restart": "always"
         }
