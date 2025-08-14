@@ -136,7 +136,7 @@ CLIENT_LOG="$LOG_DIR/client.out"
 RESULTS_CSV="$LOG_DIR/results.csv"
 rm -f "$CLIENT_LOG" "$RESULTS_CSV"
 
-echo "Runtime,Optimizations,Model,Number of Deployments,Cores per Deployment,Input Sequence Length,Output Sequence Length,Concurrency,Mean TTFT,P90 TTFT,Mean TPOT,P90 TPOT,E2E Latency,P90 E2E Latency,Output Token Throughput,Request Throughput,RAM Utilization" > "$RESULTS_CSV"
+echo "Runtime,Optimizations,Model,Number of Deployments,Cores per Deployment,Input Sequence Length,Output Sequence Length,Concurrency,Mean TTFT,P90 TTFT,Mean TPOT,P90 TPOT,E2E Latency,P90 E2E Latency,Output Token Throughput,Interactivity,Request Throughput,RAM Utilization" > "$RESULTS_CSV"
 
 # Run benchmarks: nested loops for concurrency, input lengths, and output lengths
 echo -e "Starting benchmarks... \n"
@@ -163,7 +163,7 @@ for concurrency in "${CONCURRENCIES[@]}"; do
             if [[ "$DATASET_NAME" == "vision" ]]; then
                 # Customize as per your sonnet handling requirement
                 DATASET_NAME="hf"
-                VISION_ARGS="--backend openai-chat --endpoint /v1/chat/completions --dataset-path lmarena-ai/VisionArena-Chat --hf-split train --ignore-eos"
+                VISION_ARGS="--backend openai-chat --endpoint /v1/chat/completions --dataset-path lmarena-ai/VisionArena-Chat --hf-split train --ignore-eos --hf-output-len $length"
             fi
 
             # Construct the benchmark command
@@ -203,12 +203,13 @@ for concurrency in "${CONCURRENCIES[@]}"; do
             req_throughput=$(echo "$bench_output" | grep "Request throughput" | awk -F: '{print $2}' | xargs)
 
             output_token_throughput=$(echo "$bench_output" | grep "Output token throughput" | awk -F: '{print $2}' | xargs)
-            
+            tokens_per_sec_per_user=$(awk "BEGIN {printf \"%.2f\", $output_token_throughput / $concurrency}")
+
             # Append a separator for clarity between runs
             echo -e "\n\n\n\n" >> $CLIENT_LOG
 
             # Append the extracted metrics as a CSV line to the results file
-            echo "vLLM,AMX,$MODEL,$NUM_DEPLOYMENTS,$CORES_PER_DEPLOYMENT,$length,$length,$concurrency,$mean_ttft,$p90_ttft,$mean_tpot,$p90_tpot,$mean_e2e,$p90_e2e,$output_token_throughput,$req_throughput,$RAM_USAGE_GB" >> "$RESULTS_CSV"
+            echo "vLLM,AMX,$MODEL,$NUM_DEPLOYMENTS,$CORES_PER_DEPLOYMENT,$length,$length,$concurrency,$mean_ttft,$p90_ttft,$mean_tpot,$p90_tpot,$mean_e2e,$p90_e2e,$output_token_throughput,$tokens_per_sec_per_user,$req_throughput,$RAM_USAGE_GB" >> "$RESULTS_CSV"
 
             # 5 second break
             sleep 10    
