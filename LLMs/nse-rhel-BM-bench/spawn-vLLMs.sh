@@ -24,7 +24,7 @@ print_help() {
   echo "  --server-args <args>       Additional args for vllm server"
   echo "  --model <model_path>       REQUIRED: Model to load"
   echo "  --core-ranges <ranges>     CPU core range (e.g., 0-40|43-83|86-125|128-168)"
-  echo "  --conda-env <env_name>     REQUIRED: Conda environment to activate"
+  echo "  --conda-env <env_name>     Conda environment to activate"
   echo "  --log-dir <dir>            REQUIRED: Log directory to store output"
   echo "  --help                     Show this help message and exit"
   echo "  --hf-token <token>         Hugging Face token to export as HF_TOKEN (default: built-in token)"
@@ -53,7 +53,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Check for required arguments
-if [[ -z "$MODEL" || -z "$CONDA_ENV" || -z "$LOG_DIR" ]]; then
+if [[ -z "$MODEL" || -z "$LOG_DIR" ]]; then
   echo "Error: --model, --core-ranges, --conda-env, and --log-dir are required."
   print_help
 fi
@@ -91,8 +91,8 @@ wait_for_server() {
 mkdir -p "$LOG_DIR"
 
 # Activate conda environment
-source "$(conda info --base)/etc/profile.d/conda.sh"
-conda activate "$CONDA_ENV"
+# source "$(conda info --base)/etc/profile.d/conda.sh"
+# conda activate "$CONDA_ENV"
 
 # Export environment variables
 export VLLM_CPU_OMP_THREADS_BIND="$CORE_RANGES"
@@ -100,7 +100,7 @@ export VLLM_CPU_KVCACHE_SPACE="$KV_CACHE"
 export VLLM_ENGINE_ITERATION_TIMEOUT_S=600
 export VLLM_ALLOW_LONG_MAX_MODEL_LEN=1
 export TORCHINDUCTOR_COMPILE_THREADS=1
-export LD_PRELOAD=/usr/lib64/libtcmalloc_minimal.so.4:$LD_PRELOAD
+export LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4:$LD_PRELOAD"
 export VLLM_CPU_NUM_OF_RESERVED_CPU=2
 export HF_TOKEN="$HF_TOKEN"
 export VLLM_USE_V1="$VLLM_USE_V1"
@@ -111,13 +111,10 @@ LOG_FILE="$LOG_DIR/vllm_server.log"
 # Final command
 CMD="vllm serve $MODEL \
   --dtype bfloat16 \
-  --device cpu \
   -O3 \
-  --no-enable-prefix-caching\
-  --max-seq-len-to-capture 32768 \
+  --no-enable-prefix-caching \
   --max-num-seqs 4096 \
   --enable_chunked_prefill \
-  --disable-sliding-window \
   --distributed-executor-backend mp \
   --max-num-batched-tokens 4096 \
   --host $HOST \

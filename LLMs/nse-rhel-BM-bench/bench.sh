@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Default values
-HOST="0.0.0.0"
+HOST="localhost"
 PORT=8000
 DATASET_NAME="sonnet"
 NUM_PROMPTS=1000
@@ -99,9 +99,9 @@ echo "------------------------------------"
 
 mkdir -p "$LOG_DIR"
 # Activate conda environment
-source "$(conda info --base)/etc/profile.d/conda.sh"
-conda info --env
-conda activate "$CONDA_ENV"
+# source "$(conda info --base)/etc/profile.d/conda.sh"
+# conda info --env
+# conda activate "$CONDA_ENV"
 
 echo -e "\n\n"
 
@@ -167,7 +167,7 @@ for concurrency in "${CONCURRENCIES[@]}"; do
             fi
 
             # Construct the benchmark command
-            CMD="python3 $VLLM_ROOT/benchmarks/benchmark_serving.py \
+            CMD="python $VLLM_ROOT/benchmarks/benchmark_serving.py \
                 --backend vllm \
                 --host $HOST \
                 --port $PORT \
