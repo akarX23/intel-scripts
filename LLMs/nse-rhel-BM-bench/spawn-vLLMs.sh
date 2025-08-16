@@ -8,7 +8,6 @@ KV_CACHE="100"
 VLLM_USE_V1=1
 MODEL=""
 CORE_RANGES="0-31|43-74|86-117|128-159"
-CONDA_ENV=""
 LOG_DIR=""
 HF_TOKEN=""
 
@@ -24,13 +23,12 @@ print_help() {
   echo "  --server-args <args>       Additional args for vllm server"
   echo "  --model <model_path>       REQUIRED: Model to load"
   echo "  --core-ranges <ranges>     CPU core range (e.g., 0-40|43-83|86-125|128-168)"
-  echo "  --conda-env <env_name>     Conda environment to activate"
   echo "  --log-dir <dir>            REQUIRED: Log directory to store output"
   echo "  --help                     Show this help message and exit"
   echo "  --hf-token <token>         Hugging Face token to export as HF_TOKEN (default: built-in token)"
   echo ""
   echo "Example:"
-  echo "  $0 --model meta-llama/Llama-3.1-8B-Instruct --core-ranges 0-40 --conda-env vllm-env --log-dir ./logs"
+  echo "  $0 --model meta-llama/Llama-3.1-8B-Instruct --core-ranges 0-40 --log-dir ./logs"
   exit 0
 }
 
@@ -44,7 +42,6 @@ while [[ $# -gt 0 ]]; do
     --server-args) SERVER_ARGS="$2"; shift 2 ;;
     --model) MODEL="$2"; shift 2 ;;
     --core-ranges) CORE_RANGES="$2"; shift 2 ;;
-    --conda-env) CONDA_ENV="$2"; shift 2 ;;
     --log-dir) LOG_DIR="$2"; shift 2 ;;
     --hf-token) HF_TOKEN="$2"; shift 2 ;;
     --help) print_help ;;
@@ -54,7 +51,7 @@ done
 
 # Check for required arguments
 if [[ -z "$MODEL" || -z "$LOG_DIR" ]]; then
-  echo "Error: --model, --core-ranges, --conda-env, and --log-dir are required."
+  echo "Error: --model, --core-ranges, and --log-dir are required."
   print_help
 fi
 
@@ -90,10 +87,6 @@ wait_for_server() {
 # Create log directory if it doesn't exist
 mkdir -p "$LOG_DIR"
 
-# Activate conda environment
-# source "$(conda info --base)/etc/profile.d/conda.sh"
-# conda activate "$CONDA_ENV"
-
 # Export environment variables
 export VLLM_CPU_OMP_THREADS_BIND="$CORE_RANGES"
 export VLLM_CPU_KVCACHE_SPACE="$KV_CACHE"
@@ -112,7 +105,6 @@ LOG_FILE="$LOG_DIR/vllm_server.log"
 CMD="vllm serve $MODEL \
   --dtype bfloat16 \
   -O3 \
-  --no-enable-prefix-caching \
   --max-num-seqs 4096 \
   --enable_chunked_prefill \
   --distributed-executor-backend mp \
