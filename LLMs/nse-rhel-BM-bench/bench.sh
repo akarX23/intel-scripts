@@ -15,7 +15,6 @@ LOG_DIR=""
 NUM_DEPLOYMENTS=""
 CORES_PER_DEPLOYMENT=""
 VLLM_ROOT=""
-CONDA_ENV=""
 
 # Help function
 usage() {
@@ -34,7 +33,6 @@ usage() {
     echo "  --num-deployments        (Required) Set the number of deployments"
     echo "  --cores-per-deployment   (Required) Set the number of cores per deployment"
     echo "  --vllm-root              (Required) Set the VLLM root directory"
-    echo "  --conda-env <env_name>     REQUIRED: Conda environment to activate"
     echo "  -h, --help               Show this help message and exit"
     exit 1
 }
@@ -54,7 +52,6 @@ while [[ "$#" -gt 0 ]]; do
         --num-deployments) NUM_DEPLOYMENTS="$2"; shift 2;;
         --cores-per-deployment) CORES_PER_DEPLOYMENT="$2"; shift 2;;
         --vllm-root) VLLM_ROOT="$2"; shift 2;;
-        --conda-env) CONDA_ENV="$2"; shift 2 ;;
         -h|--help) usage;;
         *) echo "Unknown option: $1"; usage;;
     esac
@@ -98,10 +95,6 @@ echo "VLLM ROOT:            $VLLM_ROOT"
 echo "------------------------------------"
 
 mkdir -p "$LOG_DIR"
-# Activate conda environment
-# source "$(conda info --base)/etc/profile.d/conda.sh"
-# conda info --env
-# conda activate "$CONDA_ENV"
 
 echo -e "\n\n"
 
