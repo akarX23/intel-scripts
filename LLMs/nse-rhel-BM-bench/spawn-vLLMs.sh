@@ -121,14 +121,13 @@ VLLM_USE_V1=\"$VLLM_USE_V1\""
 
   CMD="vllm serve $MODEL \
     --dtype bfloat16 \
-    -O3 \
-    --max-num-seqs 4096 \
-    --enable_chunked_prefill \
     --distributed-executor-backend mp \
-    --max-num-batched-tokens 4096 \
     --host $HOST \
     --port $DEPLOY_PORT \
     $SERVER_ARGS"
+
+    # --max-num-seqs 4096 \
+    # --max-num-batched-tokens 4096 \
 
   # Combine env vars + command
   ENV_AND_CMD="$ENV_VARS $CMD"
