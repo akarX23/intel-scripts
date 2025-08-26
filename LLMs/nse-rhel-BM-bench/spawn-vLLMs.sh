@@ -11,6 +11,7 @@ CORE_RANGES=""
 LOG_DIR=""
 HF_TOKEN=""
 DEPLOYMENTS=1
+VLLM_CPU_SGL_KERNEL=1
 
 # Print help message
 print_help() {
@@ -21,6 +22,7 @@ print_help() {
   echo "  --port <port>              Starting port to bind to (default: 8000)"
   echo "  --kv-cache <size>          KV Cache space (default: 100)"
   echo "  --vllm-use-v1 <0|1>        Use VLLM V1 (default: 1)"
+  echo "  --use-sgl <0|1> Use VLLM CPU single kernel (default: 1)"
   echo "  --server-args <args>       Additional args for vllm server"
   echo "  --model <model_path>       REQUIRED: Model to load"
   echo "  --core-ranges <ranges>     Comma-separated CPU core ranges per deployment"
@@ -43,6 +45,7 @@ while [[ $# -gt 0 ]]; do
     --port) PORT="$2"; shift 2 ;;
     --kv-cache) KV_CACHE="$2"; shift 2 ;;
     --vllm-use-v1) VLLM_USE_V1="$2"; shift 2 ;;
+    --use-sgl) VLLM_CPU_SGL_KERNEL="$2"; shift 2 ;;
     --server-args) SERVER_ARGS="$2"; shift 2 ;;
     --model) MODEL="$2"; shift 2 ;;
     --core-ranges) CORE_RANGES="$2"; shift 2 ;;
@@ -117,7 +120,8 @@ TORCHINDUCTOR_COMPILE_THREADS=1 \
 LD_PRELOAD=\"/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4:$LD_PRELOAD\" \
 VLLM_CPU_NUM_OF_RESERVED_CPU=2 \
 HF_TOKEN=\"$HF_TOKEN\" \
-VLLM_USE_V1=\"$VLLM_USE_V1\""
+VLLM_USE_V1=\"$VLLM_USE_V1\" \
+VLLM_CPU_SGL_KERNEL=\"$VLLM_CPU_SGL_KERNEL\""
 
   CMD="vllm serve $MODEL \
     --dtype bfloat16 \

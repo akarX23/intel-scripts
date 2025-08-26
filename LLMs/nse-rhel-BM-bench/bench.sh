@@ -6,6 +6,8 @@ PORT=8000
 DATASET_NAME="sonnet"
 NUM_PROMPTS=1000
 CLIENT_ARGS=""
+REMARK=""
+WARMUP_RUNS=0
 
 # Required arguments (initially empty)
 MODEL=""
@@ -26,6 +28,8 @@ usage() {
     echo "  --dataset-name           Set the dataset name (default: $DATASET_NAME)"
     echo "  --num-prompts            Set the number of prompts (default: $NUM_PROMPTS)"
     echo "  --client-args            Set additional client arguments"
+    echo "  --remark                 Add a comment/remark to be included in the results CSV"
+    echo "  --warmup-runs            Number of warmup runs to perform before collecting results (default: $WARMUP_RUNS)"
     echo "  --model                  (Required) Set the model name"
     echo "  --concurrencies          (Required) Set comma-separated concurrency values"
     echo "  --lengths                (Required) Set comma-separated token length values"
@@ -45,6 +49,8 @@ while [[ "$#" -gt 0 ]]; do
         --dataset-name) DATASET_NAME="$2"; shift 2;;
         --num-prompts) NUM_PROMPTS="$2"; shift 2;;
         --client-args) CLIENT_ARGS="$2"; shift 2;;
+        --remark) REMARK="$2"; shift 2;;
+        --warmup-runs) WARMUP_RUNS="$2"; shift 2;;
         --model) MODEL="$2"; shift 2;;
         --concurrencies) IFS=',' read -r -a CONCURRENCIES <<< "$2"; shift 2;;
         --lengths) IFS=',' read -r -a LENGTHS <<< "$2"; shift 2;;
@@ -85,6 +91,8 @@ echo "PORT:                 $PORT"
 echo "DATASET NAME:         $DATASET_NAME"
 echo "NUM PROMPTS:          $NUM_PROMPTS"
 echo "CLIENT ARGS:          $CLIENT_ARGS"
+echo "REMARK:               $REMARK"
+echo "WARMUP RUNS:          $WARMUP_RUNS"
 echo "MODEL:                $MODEL"
 echo "CONCURRENCIES:        ${CONCURRENCIES[*]}"
 echo "LENGTHS:              ${LENGTHS[*]}"
@@ -129,7 +137,7 @@ CLIENT_LOG="$LOG_DIR/client.out"
 RESULTS_CSV="$LOG_DIR/results.csv"
 rm -f "$CLIENT_LOG" "$RESULTS_CSV"
 
-echo "Runtime,Optimizations,Model,Number of Deployments,Cores per Deployment,Input Sequence Length,Output Sequence Length,Concurrency,Mean TTFT,P90 TTFT,Mean TPOT,P90 TPOT,E2E Latency,P90 E2E Latency,Output Token Throughput,Interactivity,Request Throughput,RAM Utilization" > "$RESULTS_CSV"
+echo "Runtime,Optimizations,Model,Number of Deployments,Cores per Deployment,Input Sequence Length,Output Sequence Length,Concurrency,Mean TTFT,P90 TTFT,Mean TPOT,P90 TPOT,E2E Latency,P90 E2E Latency,Output Token Throughput,Interactivity,Request Throughput,Remarks" > "$RESULTS_CSV"
 
 # Run benchmarks: nested loops for concurrency, input lengths, and output lengths
 echo -e "Starting benchmarks... \n"
@@ -179,6 +187,21 @@ for concurrency in "${CONCURRENCIES[@]}"; do
             # Append the command to the client.out file
             echo -e "Running command: $CMD \n" >> $CLIENT_LOG
             
+            # Perform warmup runs if configured
+            if [[ $WARMUP_RUNS -gt 0 ]]; then
+                echo -e "Performing $WARMUP_RUNS warmup run(s) before collecting metrics...\n" | tee -a "$CLIENT_LOG"
+                for (( i=1; i<=$WARMUP_RUNS; i++ )); do
+                    echo -e "Warmup run $i/$WARMUP_RUNS...\n" | tee -a "$CLIENT_LOG"
+                    warmup_output=$(eval "$CMD" 2>&1)
+                    echo -e "Warmup run $i completed.\n" | tee -a "$CLIENT_LOG"
+                    # Optional: log warmup output to file
+                    echo -e "=== WARMUP RUN $i OUTPUT ===\n$warmup_output\n=== END WARMUP RUN $i ===\n\n" >> "$CLIENT_LOG"
+                    # Wait a bit between warmup runs
+                    sleep 5
+                done
+                echo -e "All warmup runs completed. Starting measured run...\n" | tee -a "$CLIENT_LOG"
+            fi
+            
             # Execute the command and capture its output in a variable
             bench_output=$(eval "$CMD" 2>&1)
             echo "$bench_output" >> "$CLIENT_LOG"
@@ -202,7 +225,7 @@ for concurrency in "${CONCURRENCIES[@]}"; do
             echo -e "\n\n\n\n" >> $CLIENT_LOG
 
             # Append the extracted metrics as a CSV line to the results file
-            echo "vLLM,AMX,$MODEL,$NUM_DEPLOYMENTS,$CORES_PER_DEPLOYMENT,$length,$length,$concurrency,$mean_ttft,$p90_ttft,$mean_tpot,$p90_tpot,$mean_e2e,$p90_e2e,$output_token_throughput,$tokens_per_sec_per_user,$req_throughput,$RAM_USAGE_GB" >> "$RESULTS_CSV"
+            echo "vLLM,AMX,$MODEL,$NUM_DEPLOYMENTS,$CORES_PER_DEPLOYMENT,$length,$length,$concurrency,$mean_ttft,$p90_ttft,$mean_tpot,$p90_tpot,$mean_e2e,$p90_e2e,$output_token_throughput,$tokens_per_sec_per_user,$req_throughput,$REMARK" >> "$RESULTS_CSV"
 
             # 5 second break
             sleep 10    
