@@ -45,6 +45,8 @@ services:
       # - https_proxy=http://proxy-dmz.intel.com:912
       # - no_proxy=localhost
     # cpuset: "0-127"
+    ports:
+      - "8000:8000"
     command:
       - --model
       - llava-hf/llava-1.5-7b-hf
@@ -63,8 +65,8 @@ services:
       - --max-num-batched-tokens
       - "4096"
     privileged: true
-    # networks:
-    #   - vllm_net
+    networks:
+      - vllm_net
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/v1/models"]
       interval: 10s
@@ -73,33 +75,42 @@ services:
       start_period: 30s
 
   vllm-2:
-    image: vllm-cpu-env
-    restart: on-failure
+    image: akarx/vllm-cpu-env-0.10.1
     container_name: vllm-server-2
     volumes:
-      - "/home/cefls_user/.cache/huggingface:/root/.cache/huggingface"
+      - "/home/sdp/.cache/huggingface:/root/.cache/huggingface"
     environment:
-      - VLLM_USE_V1=0
-      - VLLM_ALLOW_LONG_MAX_MODEL_LEN=1
+      - VLLM_CPU_OMP_THREADS_BIND=0-31
+      - VLLM_CPU_KVCACHE_SPACE=64
       - VLLM_ENGINE_ITERATION_TIMEOUT_S=600
-      - VLLM_CPU_KVCACHE_SPACE=40
-      - VLLM_CPU_OMP_THREADS_BIND=32-63
+      - VLLM_ALLOW_LONG_MAX_MODEL_LEN=1
+      - TORCHINDUCTOR_COMPILE_THREADS=1
+      - VLLM_CPU_NUM_OF_RESERVED_CPU=2
+      - VLLM_USE_V1=1
       - HUGGING_FACE_HUB_TOKEN=
-      - http_proxy=http://proxy-dmz.intel.com:912
-      - https_proxy=http://proxy-dmz.intel.com:912
-      - no_proxy=localhost
-    cpuset: "32-63"
+      # - http_proxy=http://proxy-dmz.intel.com:912
+      # - https_proxy=http://proxy-dmz.intel.com:912
+      # - no_proxy=localhost
+    # cpuset: "0-127"
+    ports:
+      - "8000:8000"
     command:
       - --model
-      - llava-hf/llava-v1.6-vicuna-13b-hf
-      - -tp
-      - "1"
+      - llava-hf/llava-1.5-7b-hf
       - --dtype
       - bfloat16
+      - --distributed-executor-backend
+      - mp
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - -tp
+      - "1"
+      - --max-num-seqs
+      - "4096"
       - --max-num-batched-tokens
-      - "16384"
-      - --enable_chunked_prefill
-      - "True"
+      - "4096"
     privileged: true
     networks:
       - vllm_net
@@ -107,37 +118,46 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:8000/v1/models"]
       interval: 10s
       timeout: 5s
-      retries: 15
-      start_period: 120s
+      retries: 5
+      start_period: 30s
 
   vllm-3:
-    image: vllm-cpu-env
-    restart: on-failure
+    image: akarx/vllm-cpu-env-0.10.1
     container_name: vllm-server-3
     volumes:
-      - "/home/cefls_user/.cache/huggingface:/root/.cache/huggingface"
+      - "/home/sdp/.cache/huggingface:/root/.cache/huggingface"
     environment:
-      - VLLM_USE_V1=0
-      - VLLM_ALLOW_LONG_MAX_MODEL_LEN=1
+      - VLLM_CPU_OMP_THREADS_BIND=0-31
+      - VLLM_CPU_KVCACHE_SPACE=64
       - VLLM_ENGINE_ITERATION_TIMEOUT_S=600
-      - VLLM_CPU_KVCACHE_SPACE=40
-      - VLLM_CPU_OMP_THREADS_BIND=64-95
+      - VLLM_ALLOW_LONG_MAX_MODEL_LEN=1
+      - TORCHINDUCTOR_COMPILE_THREADS=1
+      - VLLM_CPU_NUM_OF_RESERVED_CPU=2
+      - VLLM_USE_V1=1
       - HUGGING_FACE_HUB_TOKEN=
-      - http_proxy=http://proxy-dmz.intel.com:912
-      - https_proxy=http://proxy-dmz.intel.com:912
-      - no_proxy=localhost
-    cpuset: "64-95"
+      # - http_proxy=http://proxy-dmz.intel.com:912
+      # - https_proxy=http://proxy-dmz.intel.com:912
+      # - no_proxy=localhost
+    # cpuset: "0-127"
+    ports:
+      - "8000:8000"
     command:
       - --model
-      - llava-hf/llava-v1.6-vicuna-13b-hf
-      - -tp
-      - "1"
+      - llava-hf/llava-1.5-7b-hf
       - --dtype
       - bfloat16
+      - --distributed-executor-backend
+      - mp
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - -tp
+      - "1"
+      - --max-num-seqs
+      - "4096"
       - --max-num-batched-tokens
-      - "16384"
-      - --enable_chunked_prefill
-      - "True"
+      - "4096"
     privileged: true
     networks:
       - vllm_net
@@ -145,37 +165,46 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:8000/v1/models"]
       interval: 10s
       timeout: 5s
-      retries: 15
-      start_period: 120s
+      retries: 5
+      start_period: 30s
 
   vllm-4:
-    image: vllm-cpu-env
-    restart: on-failure
+    image: akarx/vllm-cpu-env-0.10.1
     container_name: vllm-server-4
     volumes:
-      - "/home/cefls_user/.cache/huggingface:/root/.cache/huggingface"
+      - "/home/sdp/.cache/huggingface:/root/.cache/huggingface"
     environment:
-      - VLLM_USE_V1=0
-      - VLLM_ALLOW_LONG_MAX_MODEL_LEN=1
+      - VLLM_CPU_OMP_THREADS_BIND=0-31
+      - VLLM_CPU_KVCACHE_SPACE=64
       - VLLM_ENGINE_ITERATION_TIMEOUT_S=600
-      - VLLM_CPU_KVCACHE_SPACE=40
-      - VLLM_CPU_OMP_THREADS_BIND=96-127
+      - VLLM_ALLOW_LONG_MAX_MODEL_LEN=1
+      - TORCHINDUCTOR_COMPILE_THREADS=1
+      - VLLM_CPU_NUM_OF_RESERVED_CPU=2
+      - VLLM_USE_V1=1
       - HUGGING_FACE_HUB_TOKEN=
-      - http_proxy=http://proxy-dmz.intel.com:912
-      - https_proxy=http://proxy-dmz.intel.com:912
-      - no_proxy=localhost
-    cpuset: "96-127"
+      # - http_proxy=http://proxy-dmz.intel.com:912
+      # - https_proxy=http://proxy-dmz.intel.com:912
+      # - no_proxy=localhost
+    # cpuset: "0-127"
+    ports:
+      - "8000:8000"
     command:
       - --model
-      - llava-hf/llava-v1.6-vicuna-13b-hf
-      - -tp
-      - "1"
+      - llava-hf/llava-1.5-7b-hf
       - --dtype
       - bfloat16
+      - --distributed-executor-backend
+      - mp
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - -tp
+      - "1"
+      - --max-num-seqs
+      - "4096"
       - --max-num-batched-tokens
-      - "16384"
-      - --enable_chunked_prefill
-      - "True"
+      - "4096"
     privileged: true
     networks:
       - vllm_net
@@ -183,81 +212,81 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:8000/v1/models"]
       interval: 10s
       timeout: 5s
-      retries: 15
-      start_period: 120s
+      retries: 5
+      start_period: 30s
 
-  vllm-5:
-    image: vllm-cpu-env
-    restart: on-failure
-    container_name: vllm-server-5
-    volumes:
-      - "/home/cefls_user/.cache/huggingface:/root/.cache/huggingface"
-    environment:
-      - VLLM_USE_V1=0
-      - VLLM_ALLOW_LONG_MAX_MODEL_LEN=1
-      - VLLM_ENGINE_ITERATION_TIMEOUT_S=600
-      - VLLM_CPU_KVCACHE_SPACE=40
-      - VLLM_CPU_OMP_THREADS_BIND=128-159
-      - HUGGING_FACE_HUB_TOKEN=
-      - http_proxy=http://proxy-dmz.intel.com:912
-      - https_proxy=http://proxy-dmz.intel.com:912
-      - no_proxy=localhost
-    cpuset: "128-159"
-    command:
-      - --model
-      - llava-hf/llava-v1.6-vicuna-13b-hf
-      - -tp
-      - "1"
-      - --dtype
-      - bfloat16
-      - --max-num-batched-tokens
-      - "16384"
-      - --enable_chunked_prefill
-      - "True"
-    privileged: true
-    networks:
-      - vllm_net
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/v1/models"]
-      interval: 10s
-      timeout: 5s
-      retries: 15
-      start_period: 120s
+  # vllm-5:
+  #   image: vllm-cpu-env
+  #   restart: on-failure
+  #   container_name: vllm-server-5
+  #   volumes:
+  #     - "/home/cefls_user/.cache/huggingface:/root/.cache/huggingface"
+  #   environment:
+  #     - VLLM_USE_V1=0
+  #     - VLLM_ALLOW_LONG_MAX_MODEL_LEN=1
+  #     - VLLM_ENGINE_ITERATION_TIMEOUT_S=600
+  #     - VLLM_CPU_KVCACHE_SPACE=40
+  #     - VLLM_CPU_OMP_THREADS_BIND=128-159
+  #     - HUGGING_FACE_HUB_TOKEN=
+  #     - http_proxy=http://proxy-dmz.intel.com:912
+  #     - https_proxy=http://proxy-dmz.intel.com:912
+  #     - no_proxy=localhost
+  #   cpuset: "128-159"
+  #   command:
+  #     - --model
+  #     - llava-hf/llava-v1.6-vicuna-13b-hf
+  #     - -tp
+  #     - "1"
+  #     - --dtype
+  #     - bfloat16
+  #     - --max-num-batched-tokens
+  #     - "16384"
+  #     - --enable_chunked_prefill
+  #     - "True"
+  #   privileged: true
+  #   networks:
+  #     - vllm_net
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8000/v1/models"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 15
+  #     start_period: 120s
 
-  vllm-6:
-    image: vllm-cpu-env
-    restart: on-failure
-    container_name: vllm-server-6
-    volumes:
-      - "/home/cefls_user/.cache/huggingface:/root/.cache/huggingface"
-    environment:
-      - VLLM_USE_V1=0
-      - VLLM_ALLOW_LONG_MAX_MODEL_LEN=1
-      - VLLM_ENGINE_ITERATION_TIMEOUT_S=600
-      - VLLM_CPU_KVCACHE_SPACE=40
-      - VLLM_CPU_OMP_THREADS_BIND=160-191
-      - HUGGING_FACE_HUB_TOKEN=
-      - http_proxy=http://proxy-dmz.intel.com:912
-      - https_proxy=http://proxy-dmz.intel.com:912
-      - no_proxy=localhost
-    cpuset: "160-191"
-    command:
-      - --model
-      - llava-hf/llava-v1.6-vicuna-13b-hf
-      - -tp
-      - "1"
-      - --dtype
-      - bfloat16
-      - --max-num-batched-tokens
-      - "16384"
-      - --enable_chunked_prefill
-      - "True"
-    privileged: true
-    networks:
-      - vllm_net
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/v1/models"]
-      interval: 10s
-      timeout: 5s
-      retries: 15
-      start_period: 120s
+  # vllm-6:
+  #   image: vllm-cpu-env
+  #   restart: on-failure
+  #   container_name: vllm-server-6
+  #   volumes:
+  #     - "/home/cefls_user/.cache/huggingface:/root/.cache/huggingface"
+  #   environment:
+  #     - VLLM_USE_V1=0
+  #     - VLLM_ALLOW_LONG_MAX_MODEL_LEN=1
+  #     - VLLM_ENGINE_ITERATION_TIMEOUT_S=600
+  #     - VLLM_CPU_KVCACHE_SPACE=40
+  #     - VLLM_CPU_OMP_THREADS_BIND=160-191
+  #     - HUGGING_FACE_HUB_TOKEN=
+  #     - http_proxy=http://proxy-dmz.intel.com:912
+  #     - https_proxy=http://proxy-dmz.intel.com:912
+  #     - no_proxy=localhost
+  #   cpuset: "160-191"
+  #   command:
+  #     - --model
+  #     - llava-hf/llava-v1.6-vicuna-13b-hf
+  #     - -tp
+  #     - "1"
+  #     - --dtype
+  #     - bfloat16
+  #     - --max-num-batched-tokens
+  #     - "16384"
+  #     - --enable_chunked_prefill
+  #     - "True"
+  #   privileged: true
+  #   networks:
+  #     - vllm_net
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8000/v1/models"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 15
+  #     start_period: 120s
